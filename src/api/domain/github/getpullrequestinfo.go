@@ -25,14 +25,6 @@ type GetSinglePullRequestResponse struct {
 	Commits           int64     `json:"commits"`
 }
 
-//GitUser stores info about a user
-type GitUser struct {
-	Login     string `json:"login"`
-	ID        int64  `json:"id"`
-	Type      string `json:"type"`
-	SiteAdmin bool   `json:"site_admin"`
-}
-
 //RepoBase stores info about the base of the repo
 type RepoBase struct {
 	Label string `json:"label"`

@@ -51,19 +51,19 @@ func TestGetPRsInvalidStateValue(t *testing.T) {
 }
 
 func TestValidateInpusValidStateValues(t *testing.T) {
-	owner, scope, state, err := validateInputs("owner", "repo", "open")
+	owner, scope, state, err := validatePRInputs("owner", "repo", "open")
 	assert.NotNil(t, owner)
 	assert.NotNil(t, scope)
 	assert.NotNil(t, state)
 	assert.Nil(t, err)
 
-	owner, scope, state, err = validateInputs("owner", "repo", "closed")
+	owner, scope, state, err = validatePRInputs("owner", "repo", "closed")
 	assert.NotNil(t, owner)
 	assert.NotNil(t, scope)
 	assert.NotNil(t, state)
 	assert.Nil(t, err)
 
-	owner, scope, state, err = validateInputs("owner", "repo", "all")
+	owner, scope, state, err = validatePRInputs("owner", "repo", "all")
 	assert.NotNil(t, owner)
 	assert.NotNil(t, scope)
 	assert.NotNil(t, state)
@@ -117,20 +117,8 @@ func TestGetPRsNoError(t *testing.T) {
 	assert.EqualValues(t, closeDate, response[0].ClosedAt)
 	assert.EqualValues(t, mergeDate, response[0].MergedAt)
 	assert.EqualValues(t, "ABCDEF1234567890", response[0].MergeCommitSHA)
-
-	assert.EqualValues(t, "My Login ID", response[0].User.Login)
-	assert.EqualValues(t, 123456, response[0].User.ID)
-	assert.EqualValues(t, "A user", response[0].User.Type)
-	assert.EqualValues(t, true, response[0].User.SiteAdmin)
-
-	assert.EqualValues(t, "A Second Login ID", response[0].Assignee.Login)
-	assert.EqualValues(t, 8767, response[0].Assignee.ID)
-	assert.EqualValues(t, "A user", response[0].Assignee.Type)
-	assert.EqualValues(t, false, response[0].Assignee.SiteAdmin)
-
-	assert.EqualValues(t, "A label", response[0].Base.Label)
-	assert.EqualValues(t, "A Reference", response[0].Base.Ref)
-	assert.EqualValues(t, "ABCDEF123456768", response[0].Base.SHA)
+	//will just test one of the items has been marshalled okay
+	//the domain object tests this fully so no need for duplication
 }
 
 func TestRepoSinglePRInvalidOwner(t *testing.T) {
@@ -215,19 +203,198 @@ func TestRepoSinglePRNoError(t *testing.T) {
 	assert.EqualValues(t, updateDate, response.UpdatedAt)
 	assert.EqualValues(t, closeDate, response.ClosedAt)
 	assert.EqualValues(t, mergeDate, response.MergedAt)
-	assert.EqualValues(t, "ABCDEF1234567890", response.MergeCommitSHA)
+	//will just test one of the items has been marshalled okay
+	//the domain object tests this fully so no need for duplication
 
-	assert.EqualValues(t, "My Login ID", response.User.Login)
-	assert.EqualValues(t, 123456, response.User.ID)
-	assert.EqualValues(t, "A user", response.User.Type)
-	assert.EqualValues(t, true, response.User.SiteAdmin)
+}
 
-	assert.EqualValues(t, "A Second Login ID", response.Assignee.Login)
-	assert.EqualValues(t, 8767, response.Assignee.ID)
-	assert.EqualValues(t, "A user", response.Assignee.Type)
-	assert.EqualValues(t, false, response.Assignee.SiteAdmin)
+func TestSingleCommitPRNInvalidOwner(t *testing.T) {
+	result, err := RepositoryService.GetSingleCommitPR("", "repo", "asd")
+	assert.Nil(t, result)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.Status())
+	assert.EqualValues(t, "invalid owner parameter", err.Message())
 
-	assert.EqualValues(t, "A label", response.Base.Label)
-	assert.EqualValues(t, "A Reference", response.Base.Ref)
-	assert.EqualValues(t, "ABCDEF123456768", response.Base.SHA)
+}
+
+func TestSingleCommitPRInvalidRepo(t *testing.T) {
+	result, err := RepositoryService.GetSingleCommitPR("owner", "", "asd")
+	assert.Nil(t, result)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.Status())
+	assert.EqualValues(t, "invalid repo parameter", err.Message())
+
+}
+
+func TestSingleCommitPRInvalidSHA(t *testing.T) {
+	result, err := RepositoryService.GetSingleCommitPR("owner", "repo", "")
+	assert.Nil(t, result)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.Status())
+	assert.EqualValues(t, "invalid SHA parameter", err.Message())
+
+}
+
+func TestSingleCommitPRErrorFromGithub(t *testing.T) {
+	restclient.FlushMockups()
+	restclient.AddMockup(restclient.Mock{
+		URL:        "https://api.github.com/repos/test/user1/commits/ABC/pulls",
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: http.StatusUnauthorized,
+			Body:       ioutil.NopCloser(strings.NewReader(`{"message": "Requires authentication"}`)),
+		},
+	})
+
+	response, err := RepositoryService.GetSingleCommitPR("test", "user1", "ABC")
+	assert.Nil(t, response)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusUnauthorized, err.Status())
+	assert.EqualValues(t, "Requires authentication", err.Message())
+}
+
+func TestSingleCommitPRNoError(t *testing.T) {
+	restclient.FlushMockups()
+	restclient.AddMockup(restclient.Mock{
+		URL:        "https://api.github.com/repos/test/user1/commits/sha123/pulls",
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: http.StatusCreated,
+			Body:       ioutil.NopCloser(strings.NewReader(`[{"url":"some URL","id":123456,"number":9,"state":"open","title":"Title of the PR","created_at":"2019-11-27T14:30:10.578255Z","updated_at":"2019-10-28T14:30:10.578369Z","closed_at":"2019-10-28T14:30:10.578369Z","merged_at":"2019-10-28T14:30:10.578369Z","merge_commit_sha":"ABCDEF1234567890","user":{"login":"My Login ID","id":123456,"type":"A user","site_admin":true},"assignee":{"login":"A Second Login ID","id":8767,"type":"A user","site_admin":false},"base":{"label":"A label","ref":"A Reference","sha":"ABCDEF123456768"}}]`)),
+		},
+	})
+
+	response, err := RepositoryService.GetSingleCommitPR("test", "user1", "sha123")
+	assert.NotNil(t, response)
+	assert.Nil(t, err)
+	assert.EqualValues(t, response[0].URL, "some URL")
+	assert.EqualValues(t, response[0].ID, 123456)
+	//the JSON is tested elswhere so not doing a full set of assertions here
+}
+
+func TestGetRepoCommitsInvalidOwner(t *testing.T) {
+	result, err := RepositoryService.GetRepoCommits("", "repo")
+	assert.Nil(t, result)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.Status())
+	assert.EqualValues(t, "invalid owner parameter", err.Message())
+
+}
+
+func TestGetRepoCommitsInvalidRepo(t *testing.T) {
+	result, err := RepositoryService.GetRepoCommits("owner", "")
+	assert.Nil(t, result)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.Status())
+	assert.EqualValues(t, "invalid repo parameter", err.Message())
+
+}
+
+func TestGetRepoCommitsErrorFromGithub(t *testing.T) {
+	restclient.FlushMockups()
+	restclient.AddMockup(restclient.Mock{
+		URL:        "https://api.github.com/repos/test/user1/commits",
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: http.StatusUnauthorized,
+			Body:       ioutil.NopCloser(strings.NewReader(`{"message": "Requires authentication"}`)),
+		},
+	})
+
+	response, err := RepositoryService.GetRepoCommits("test", "user1")
+	assert.Nil(t, response)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusUnauthorized, err.Status())
+	assert.EqualValues(t, "Requires authentication", err.Message())
+}
+
+func TestGetRepoCommitsNoError(t *testing.T) {
+	restclient.FlushMockups()
+	restclient.AddMockup(restclient.Mock{
+		URL:        "https://api.github.com/repos/test/user1/commits",
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: http.StatusCreated,
+			Body:       ioutil.NopCloser(strings.NewReader(`[{"url":"http://www.github.com","sha":"AABCDEF123456","commit":{"url":"http://www.github.com","author":{"name":"some name","email":"email@email.com","date":"2019-12-09T15:00:04.061358Z"},"committer":{"name":"some committer","email":"someemail@email.com","date":"2019-12-09T15:00:04.061358Z"},"message":"some commit message"},"author":{"login":"some loing id","id":9876,"type":"user","site_admin":true},"committer":{"login":"login id","id":12345,"type":"user","site_admin":false},"parents":[{"url":"http://test.com","sha":"ABCDEF123456768"},{"url":"http://test12.com","sha":"ABFGGG"}]}]`)),
+		},
+	})
+
+	response, err := RepositoryService.GetRepoCommits("test", "user1")
+	assert.NotNil(t, response)
+	assert.Nil(t, err)
+	assert.EqualValues(t, len(response), 1)
+	assert.EqualValues(t, response[0].URL, "http://www.github.com")
+	assert.EqualValues(t, response[0].SHA, "AABCDEF123456")
+
+	//will just test one of the items has been marshalled okay
+	//the domain object tests this fully so no need for duplication
+	assert.EqualValues(t, response[0].Commit.URL, "http://www.github.com")
+}
+
+func TestRepoCommitInvalidOwner(t *testing.T) {
+	result, err := RepositoryService.GetRepoSingleCommit("", "repo", "asd")
+	assert.Nil(t, result)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.Status())
+	assert.EqualValues(t, "invalid owner parameter", err.Message())
+
+}
+
+func TestRepoSingleCommitInvalidRepo(t *testing.T) {
+	result, err := RepositoryService.GetRepoSingleCommit("owner", "", "asd")
+	assert.Nil(t, result)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.Status())
+	assert.EqualValues(t, "invalid repo parameter", err.Message())
+
+}
+
+func TestRepoSingleCommitInvalidSHA(t *testing.T) {
+	result, err := RepositoryService.GetRepoSingleCommit("owner", "repo", "")
+	assert.Nil(t, result)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusBadRequest, err.Status())
+	assert.EqualValues(t, "invalid SHA parameter", err.Message())
+
+}
+
+func TestRepoSingleCommitErrorFromGithub(t *testing.T) {
+	restclient.FlushMockups()
+	restclient.AddMockup(restclient.Mock{
+		URL:        "https://api.github.com/repos/test/user1/commits/shaabcd",
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: http.StatusUnauthorized,
+			Body:       ioutil.NopCloser(strings.NewReader(`{"message": "Requires authentication"}`)),
+		},
+	})
+
+	response, err := RepositoryService.GetRepoSingleCommit("test", "user1", "shaabcd")
+	assert.Nil(t, response)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusUnauthorized, err.Status())
+	assert.EqualValues(t, "Requires authentication", err.Message())
+}
+
+func TestRepoSingleCommitNoError(t *testing.T) {
+	restclient.FlushMockups()
+	restclient.AddMockup(restclient.Mock{
+		URL:        "https://api.github.com/repos/test/user1/commits/shaabcd",
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: http.StatusCreated,
+			Body:       ioutil.NopCloser(strings.NewReader(`{"url":"http://www.github.com","sha":"AABCDEF123456","commit":{"url":"http://www.github.com","author":{"name":"some name","email":"email@email.com","date":"2019-12-09T15:00:04.061358Z"},"committer":{"name":"some committer","email":"someemail@email.com","date":"2019-12-09T15:00:04.061358Z"},"message":"some commit message"},"author":{"login":"some loing id","id":9876,"type":"user","site_admin":true},"committer":{"login":"login id","id":12345,"type":"user","site_admin":false},"parents":[{"url":"http://test.com","sha":"ABCDEF123456768"},{"url":"http://test12.com","sha":"ABFGGG"}]}`)),
+		},
+	})
+
+	response, err := RepositoryService.GetRepoSingleCommit("test", "user1", "shaabcd")
+
+	assert.NotNil(t, response)
+	assert.Nil(t, err)
+	assert.EqualValues(t, response.URL, "http://www.github.com")
+	assert.EqualValues(t, response.SHA, "AABCDEF123456")
+
+	//will just test one of the items has been marshalled okay
+	//the domain object tests this fully so no need for duplication
+	assert.EqualValues(t, response.Commit.URL, "http://www.github.com")
 }

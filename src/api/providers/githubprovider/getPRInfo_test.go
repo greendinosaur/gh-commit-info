@@ -25,6 +25,7 @@ func TestConstants(t *testing.T) {
 	assert.EqualValues(t, "token %s", headerAuthorizationFormat)
 	assert.EqualValues(t, "Accept", headerAccept)
 	assert.EqualValues(t, "application/vnd.github.shadow-cat-preview+json", headerPRDraftAPI)
+	assert.EqualValues(t, "application/vnd.github.groot-preview+json", headerPRForCommitDraftAPI)
 	assert.EqualValues(t, "https://api.github.com/repos/%s/%s/pulls?state=%s", urlGetRepoPRs)
 	assert.EqualValues(t, "https://api.github.com/repos/%s/%s/pulls/%s", urlGetRepoSinglePR)
 
@@ -175,11 +176,6 @@ func TestGetRepoPRsNoError(t *testing.T) {
 
 }
 
-func TestGetSinglePRURL(t *testing.T) {
-	URL := getSinglePRURL("myowner", "myrepo", "1")
-	assert.EqualValues(t, "https://api.github.com/repos/myowner/myrepo/pulls/1", URL)
-}
-
 func TestGetRepoSinglePRErrorRestclient(t *testing.T) {
 	restclient.FlushMockups()
 	restclient.AddMockup(restclient.Mock{
@@ -313,4 +309,56 @@ func TestGetRepoSinglePRNoError(t *testing.T) {
 	assert.EqualValues(t, "A Reference", response.Base.Ref)
 	assert.EqualValues(t, "ABCDEF123456768", response.Base.SHA)
 
+}
+
+func TestGetGetSingleCommitPRErrorFromGithub(t *testing.T) {
+	restclient.FlushMockups()
+
+	restclient.AddMockup(restclient.Mock{
+		URL:        "https://api.github.com/repos/test/user1/commits/sha123/pulls",
+		HTTPMethod: http.MethodGet,
+		Err:        errors.New("invalid rest client response"),
+	})
+	response, err := GetSingleCommitPR("", "test", "user1", "sha123")
+	assert.Nil(t, response)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, "invalid rest client response", err.Message)
+}
+
+func TestGetGetSingleCommitPRErrorResponseBody(t *testing.T) {
+
+	restclient.FlushMockups()
+
+	restclient.AddMockup(restclient.Mock{
+		URL:        "https://api.github.com/repos/test/user1/commits/sha123/pulls",
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: http.StatusCreated,
+			Body:       ioutil.NopCloser(strings.NewReader(`{"id": "123"}`)),
+		},
+	})
+	response, err := GetSingleCommitPR("", "test", "user1", "sha123")
+	assert.Nil(t, response)
+	assert.NotNil(t, err)
+	assert.EqualValues(t, http.StatusInternalServerError, err.StatusCode)
+	assert.EqualValues(t, "error when trying to unmarshal github response", err.Message)
+}
+
+func TestGetGetSingleCommitPRNoError(t *testing.T) {
+	restclient.FlushMockups()
+
+	restclient.AddMockup(restclient.Mock{
+		URL:        "https://api.github.com/repos/test/user1/commits/sha123/pulls",
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: http.StatusCreated,
+			Body:       ioutil.NopCloser(strings.NewReader(`[{"url":"some URL","id":123456,"number":9,"state":"open","title":"Title of the PR","created_at":"2019-11-27T14:30:10.578255Z","updated_at":"2019-10-28T14:30:10.578369Z","closed_at":"2019-10-28T14:30:10.578369Z","merged_at":"2019-10-28T14:30:10.578369Z","merge_commit_sha":"ABCDEF1234567890","user":{"login":"My Login ID","id":123456,"type":"A user","site_admin":true},"assignee":{"login":"A Second Login ID","id":8767,"type":"A user","site_admin":false},"base":{"label":"A label","ref":"A Reference","sha":"ABCDEF123456768"}}]`)),
+		},
+	})
+	response, err := GetSingleCommitPR("", "test", "user1", "sha123")
+	assert.NotNil(t, response)
+	assert.Nil(t, err)
+	assert.EqualValues(t, response[0].URL, "some URL")
+	assert.EqualValues(t, response[0].ID, 123456)
+	//the JSON is tested elswhere so not doing a full set of assertions here
 }

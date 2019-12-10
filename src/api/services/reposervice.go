@@ -1,9 +1,9 @@
 package services
 
 import (
-	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/greendinosaur/gh-commit-info/src/api/config"
 	"github.com/greendinosaur/gh-commit-info/src/api/domain/github"
@@ -16,6 +16,9 @@ type reposService struct{}
 type reposServiceInterface interface {
 	GetRepoPRs(owner string, repo string, scope string) ([]github.MultiplePullRequestResponse, errors.APIError)
 	GetRepoSinglePR(owner string, repo string, pullNumber string) (*github.GetSinglePullRequestResponse, errors.APIError)
+	GetSingleCommitPR(owner string, repo string, SHA string) ([]github.MultiplePullRequestResponse, errors.APIError)
+	GetRepoCommits(owner string, repo string) ([]github.GetCommitInfo, errors.APIError)
+	GetRepoSingleCommit(owner string, repo string, SHA string) (*github.GetCommitInfo, errors.APIError)
 }
 
 //RepositoryService defines the service to use
@@ -30,7 +33,8 @@ func ResetService() {
 	RepositoryService = &reposService{}
 }
 
-func validateInputs(owner string, repo string, scope string) (string, string, string, errors.APIError) {
+//check the inputs for an individual PR are correct
+func validatePRInputs(owner string, repo string, scope string) (string, string, string, errors.APIError) {
 
 	owner = strings.TrimSpace(owner)
 	repo = strings.TrimSpace(repo)
@@ -61,6 +65,7 @@ func validateInputs(owner string, repo string, scope string) (string, string, st
 
 }
 
+//check that the inputs to get a single PR are good
 func validateSinglePRInputs(owner string, repo string, pullNumber string) (string, string, string, errors.APIError) {
 
 	owner = strings.TrimSpace(owner)
@@ -88,11 +93,53 @@ func validateSinglePRInputs(owner string, repo string, pullNumber string) (strin
 
 }
 
+//check that the inputs for the PRs associated to a single commit are good
+func validateSingleCommitPRInputs(owner string, repo string, SHA string) (string, string, string, errors.APIError) {
+
+	owner = strings.TrimSpace(owner)
+	repo = strings.TrimSpace(repo)
+	SHA = strings.TrimSpace(SHA)
+
+	if len(owner) == 0 {
+		//an error
+		return owner, repo, SHA, errors.NewBadRequestError("invalid owner parameter")
+	}
+
+	if len(repo) == 0 {
+		return owner, repo, SHA, errors.NewBadRequestError("invalid repo parameter")
+	}
+	if len(SHA) == 0 {
+		return owner, repo, SHA, errors.NewBadRequestError("invalid SHA parameter")
+	}
+
+	return owner, repo, SHA, nil
+
+}
+
+//check that the inputs for all commits in a repo are good
+func validateAllommitsInputs(owner string, repo string) (string, string, errors.APIError) {
+
+	owner = strings.TrimSpace(owner)
+	repo = strings.TrimSpace(repo)
+
+	if len(owner) == 0 {
+		//an error
+		return owner, repo, errors.NewBadRequestError("invalid owner parameter")
+	}
+
+	if len(repo) == 0 {
+		return owner, repo, errors.NewBadRequestError("invalid repo parameter")
+	}
+
+	return owner, repo, nil
+
+}
+
 //GetRepoPRs returns pull request information for the given repo
 func (s *reposService) GetRepoPRs(owner string, repo string, scope string) ([]github.MultiplePullRequestResponse, errors.APIError) {
 	//firstly check the input params are valid and create an error otherwise
 	var err errors.APIError
-	owner, repo, scope, err = validateInputs(owner, repo, scope)
+	owner, repo, scope, err = validatePRInputs(owner, repo, scope)
 	if err != nil {
 		return nil, err
 	}
@@ -115,11 +162,75 @@ func (s *reposService) GetRepoSinglePR(owner string, repo string, pullNumber str
 		return nil, err
 	}
 	//then call the provider with valid parameters
-	log.Println("calling provider", owner, repo, pullNumber)
 	response, errProvider := githubprovider.GetRepoSinglePR(config.GetGithubAccessToken(), owner, repo, pullNumber)
 	if errProvider != nil {
 		return nil, errors.NewAPIError(errProvider.StatusCode, errProvider.Message)
 	}
 
 	return response, nil
+}
+
+//GetSingleCommitPR returns the PRs associated with the specific commit SHA
+func (s *reposService) GetSingleCommitPR(owner string, repo string, SHA string) ([]github.MultiplePullRequestResponse, errors.APIError) {
+
+	var err errors.APIError
+	owner, repo, SHA, err = validateSingleCommitPRInputs(owner, repo, SHA)
+	if err != nil {
+		return nil, err
+	}
+
+	response, errProvider := githubprovider.GetSingleCommitPR(config.GetGithubAccessToken(), owner, repo, SHA)
+	if errProvider != nil {
+		return nil, errors.NewAPIError(errProvider.StatusCode, errProvider.Message)
+	}
+
+	return response, nil
+
+}
+
+//GetRepoCommits returns all commits from the given repo
+func (s *reposService) GetRepoCommits(owner string, repo string) ([]github.GetCommitInfo, errors.APIError) {
+	var err errors.APIError
+	owner, repo, err = validateAllommitsInputs(owner, repo)
+	if err != nil {
+		return nil, err
+	}
+
+	response, errProvider := githubprovider.GetRepoCommits(config.GetGithubAccessToken(), owner, repo)
+	if errProvider != nil {
+		return nil, errors.NewAPIError(errProvider.StatusCode, errProvider.Message)
+	}
+
+	return response, nil
+}
+
+//GetRepoSingleCommit returns details about a specific commit inside the indicated repo
+func (s *reposService) GetRepoSingleCommit(owner string, repo string, SHA string) (*github.GetCommitInfo, errors.APIError) {
+	var err errors.APIError
+	owner, repo, SHA, err = validateSingleCommitPRInputs(owner, repo, SHA)
+	if err != nil {
+		return nil, err
+	}
+
+	response, errProvider := githubprovider.GetRepoSingleCommit(config.GetGithubAccessToken(), owner, repo, SHA)
+	if errProvider != nil {
+		return nil, errors.NewAPIError(errProvider.StatusCode, errProvider.Message)
+	}
+
+	return response, nil
+}
+
+//determines if a commit is a merge commit
+func isMergeCommit() bool {
+	return false
+}
+
+//determines if all commits in a given timeframe are associated with an approved PR
+func isCommitWithApprovedPR(startTime time.Time, endtime time.Time) bool {
+	return false
+}
+
+//checks that the person approving the PR is not responsible for any of the commits detailed in the PR
+func isPRApproverDifferentToCommitters() bool {
+	return false
 }

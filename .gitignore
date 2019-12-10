@@ -11,5 +11,8 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# VS Code
+# VS Code and other files
 .vscode
+.scannerwork
+bw-output
+cp.out
