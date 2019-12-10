@@ -1,0 +1,369 @@
+{
+	"info": {
+		"_postman_id": "d4d46353-e438-4f52-a3e0-8b5a434eac29",
+		"name": "gh-commit-info smoke tests",
+		"description": "Contains a set of smoke tests to test the exposed end-points for the golang app are working as expected whilst the web server is running.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "service is running",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "3b9c081d-3ab5-4642-8b28-7804cb89c752",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Body matches string\", function () {",
+							"    pm.expect(pm.response.text()).to.include(\"bobby and his chariots\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{BASE_URL}}/bobby",
+					"protocol": "http",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"bobby"
+					]
+				},
+				"description": "check the service is running"
+			},
+			"response": []
+		},
+		{
+			"name": "check get all pull requests is working",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "f098f606-cd15-4472-8447-fe7284a7f6cc",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type is JSON\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"    pm.response.to.be.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+							"",
+							"});",
+							"",
+							"pm.test(\"response has a body\", function () {",
+							"     // assert that the status code is 200",
+							"     // assert that the response has a valid JSON body",
+							"     pm.response.to.be.withBody;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{BASE_URL}}/repos/{{OWNER}}/{{REPO}}/pulls",
+					"protocol": "http",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"repos",
+						"{{OWNER}}",
+						"{{REPO}}",
+						"pulls"
+					]
+				},
+				"description": "checking that the API call to get all pull requests is working as expected"
+			},
+			"response": []
+		},
+		{
+			"name": "check a single PR API call works",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "4b1e7d43-359c-44a3-a1a7-896962d86726",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Content-Type is JSON\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"    pm.response.to.be.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+							"",
+							"});",
+							"",
+							"pm.test(\"response has a body\", function () {",
+							"     // assert that the response has a valid JSON body",
+							"     pm.response.to.be.withBody;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{BASE_URL}}/repos/{{OWNER}}/{{REPO}}/pulls/1",
+					"protocol": "http",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"repos",
+						"{{OWNER}}",
+						"{{REPO}}",
+						"pulls",
+						"1"
+					]
+				},
+				"description": "checks that the API call to return a single pull request is working as expected"
+			},
+			"response": []
+		},
+		{
+			"name": "check invalid pull number is rejected",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "390bace6-a28d-4e18-b450-d86f153b4f09",
+						"exec": [
+							"pm.test(\"Status code is 404\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							"",
+							"pm.test(\"Body matches string\", function () {",
+							"    pm.expect(pm.response.text()).to.include(\"Not Found\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{BASE_URL}}/repos/{{OWNER}}/{{REPO}}/pulls/-1",
+					"protocol": "http",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"repos",
+						"{{OWNER}}",
+						"{{REPO}}",
+						"pulls",
+						"-1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "check get all commits work",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "c9b9af3b-8f07-4ebd-90c0-a1a65b4a0d41",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Content-Type is JSON\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"    pm.response.to.be.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+							"",
+							"});",
+							"",
+							"pm.test(\"response has a body\", function () {",
+							"     // assert that the response has a valid JSON body",
+							"     pm.response.to.be.withBody;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{BASE_URL}}/repos/{{OWNER}}/{{REPO}}/commits",
+					"protocol": "http",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"repos",
+						"{{OWNER}}",
+						"{{REPO}}",
+						"commits"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "check invalid commit request is rejected",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "d479ab0c-4dd3-40dc-9ebb-6f5efd1cbf23",
+						"exec": [
+							"pm.test(\"Status code is 422\", function () {",
+							"    pm.response.to.have.status(422);",
+							"});",
+							"",
+							"pm.test(\"Content-Type is JSON\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"    pm.response.to.be.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+							"",
+							"});",
+							"",
+							"pm.test(\"Body matches string\", function () {",
+							"    pm.expect(pm.response.text()).to.include(\"No commit found for SHA: -1\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{BASE_URL}}/repos/{{OWNER}}/{{REPO}}/commits/-1",
+					"protocol": "http",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"repos",
+						"{{OWNER}}",
+						"{{REPO}}",
+						"commits",
+						"-1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get a single commit",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "4dec1ca9-f561-4b86-a409-50659d154657",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Content-Type is JSON\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"    pm.response.to.be.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+							"",
+							"});",
+							"",
+							"pm.test(\"response has a body\", function () {",
+							"     // assert that the response has a valid JSON body",
+							"     pm.response.to.be.withBody;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{BASE_URL}}/repos/{{OWNER}}/{{REPO}}/commits/{{SHA}}",
+					"protocol": "http",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"repos",
+						"{{OWNER}}",
+						"{{REPO}}",
+						"commits",
+						"{{SHA}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get the PRs associated with a commit",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "0a422ffb-dfea-416d-89d4-c577477e78ca",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Content-Type is JSON\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"    pm.response.to.be.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+							"",
+							"});",
+							"",
+							"pm.test(\"response has a body\", function () {",
+							"     // assert that the response has a valid JSON body",
+							"     pm.response.to.be.withBody;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{BASE_URL}}/repos/{{OWNER}}/{{REPO}}/commits/{{SHA}}/pulls",
+					"protocol": "http",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"repos",
+						"{{OWNER}}",
+						"{{REPO}}",
+						"commits",
+						"{{SHA}}",
+						"pulls"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

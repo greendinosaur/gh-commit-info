@@ -31,7 +31,7 @@ func TestGetMockedConstantParams(t *testing.T) {
 	assert.Nil(t, err)
 	request.Header = http.Header{"X-Mock": {"true"}}
 
-	params := map[string]string{"owner": "myowner", "repo": "myrepo", "state": "All"}
+	params := map[string]string{"owner": "myowner", "repo": "myrepo", "state": "all"}
 
 	c, _ := GetMockedContextWithParams(request, response, params)
 
@@ -44,6 +44,6 @@ func TestGetMockedConstantParams(t *testing.T) {
 	assert.EqualValues(t, "true", c.GetHeader("X-mock"))
 	assert.EqualValues(t, "myowner", c.Param("owner"))
 	assert.EqualValues(t, "myrepo", c.Param("repo"))
-	assert.EqualValues(t, "All", c.Param("state"))
+	assert.EqualValues(t, "all", c.Param("state"))
 
 }

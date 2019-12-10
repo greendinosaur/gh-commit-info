@@ -26,7 +26,7 @@ func TestFlushMockups(t *testing.T) {
 }
 
 func TestAddMockupMissing(t *testing.T) {
-	URL := "https://api.github.com/repos/myowner/myrepo/pulls?state=All"
+	URL := "https://api.github.com/repos/myowner/myrepo/pulls?state=all"
 	method := http.MethodGet
 	AddMockup(Mock{
 		URL:        URL,
@@ -45,7 +45,7 @@ func TestAddMockupMissing(t *testing.T) {
 
 func TestAddMockupPresent(t *testing.T) {
 
-	URL := "https://api.github.com/repos/myowner/myrepo/pulls?state=All"
+	URL := "https://api.github.com/repos/myowner/myrepo/pulls?state=all"
 	method := http.MethodGet
 	AddMockup(Mock{
 		URL:        URL,
@@ -66,7 +66,7 @@ func TestAddMockupPresent(t *testing.T) {
 }
 
 func TestGetMockResponseNotPresent(t *testing.T) {
-	URL := "https://api.github.com/repos/myowner/myrepo/pulls?state=All"
+	URL := "https://api.github.com/repos/myowner/myrepo/pulls?state=all"
 	method := http.MethodGet
 	AddMockup(Mock{
 		URL:        URL,
@@ -84,7 +84,7 @@ func TestGetMockResponseNotPresent(t *testing.T) {
 }
 
 func TestGetMockResponseMockPresent(t *testing.T) {
-	URL := "https://api.github.com/repos/myowner/myrepo/pulls?state=All"
+	URL := "https://api.github.com/repos/myowner/myrepo/pulls?state=all"
 	method := http.MethodGet
 	AddMockup(Mock{
 		URL:        URL,
