@@ -43,3 +43,44 @@ func GetRepoSinglePR(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, result)
 }
+
+//GetRepoCommits returns all commits for a repo
+func GetRepoCommits(c *gin.Context) {
+	owner := c.Param("owner")
+	repo := c.Param("repo")
+
+	result, err := services.RepositoryService.GetRepoCommits(owner, repo)
+	if err != nil {
+		c.JSON(err.Status(), err)
+		return
+	}
+	c.JSON(http.StatusCreated, result)
+}
+
+//GetRepoSingleCommit returns a single commit for a repo
+func GetRepoSingleCommit(c *gin.Context) {
+	owner := c.Param("owner")
+	repo := c.Param("repo")
+	SHA := c.Param("sha")
+
+	result, err := services.RepositoryService.GetRepoSingleCommit(owner, repo, SHA)
+	if err != nil {
+		c.JSON(err.Status(), err)
+		return
+	}
+	c.JSON(http.StatusCreated, result)
+}
+
+//GetPRsForSingleCommit returns the PRs associated to a specific commit
+func GetPRsForSingleCommit(c *gin.Context) {
+	owner := c.Param("owner")
+	repo := c.Param("repo")
+	SHA := c.Param("sha")
+
+	result, err := services.RepositoryService.GetSingleCommitPR(owner, repo, SHA)
+	if err != nil {
+		c.JSON(err.Status(), err)
+		return
+	}
+	c.JSON(http.StatusCreated, result)
+}

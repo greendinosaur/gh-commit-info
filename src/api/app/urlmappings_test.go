@@ -91,3 +91,6 @@ func TestGetRepoSinglePRErrorFromGithub(t *testing.T) {
 	assert.EqualValues(t, http.StatusUnauthorized, apiErr.Status())
 	assert.EqualValues(t, "Requires authentication", apiErr.Message())
 }
+
+//TODO: missing tests for the three commit based API calls, not added as likely these won't be exposed
+//in this way in the future as the API exposed to clients will change

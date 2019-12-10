@@ -17,8 +17,11 @@ import (
 )
 
 var (
-	funcGetRepoPRs      func(owner string, repo string, scope string) ([]github.MultiplePullRequestResponse, errors.APIError)
-	funcGetRepoSinglePR func(owner string, repo string, pullRequst string) (*github.GetSinglePullRequestResponse, errors.APIError)
+	funcGetRepoPRs          func(owner string, repo string, scope string) ([]github.MultiplePullRequestResponse, errors.APIError)
+	funcGetRepoSinglePR     func(owner string, repo string, pullRequst string) (*github.GetSinglePullRequestResponse, errors.APIError)
+	funcGetSingleCommitPR   func(owner string, repo string, SHA string) ([]github.MultiplePullRequestResponse, errors.APIError)
+	funcGetRepoCommits      func(owner string, repo string) ([]github.GetCommitInfo, errors.APIError)
+	funcGetRepoSingleCommit func(owner string, repo string, SHA string) (*github.GetCommitInfo, errors.APIError)
 )
 
 type repoServiceMock struct{}
@@ -29,6 +32,18 @@ func (s *repoServiceMock) GetRepoPRs(owner string, repo string, scope string) ([
 
 func (s *repoServiceMock) GetRepoSinglePR(owner string, repo string, pullRequest string) (*github.GetSinglePullRequestResponse, errors.APIError) {
 	return funcGetRepoSinglePR(owner, repo, pullRequest)
+}
+
+func (s *repoServiceMock) GetSingleCommitPR(owner string, repo string, SHA string) ([]github.MultiplePullRequestResponse, errors.APIError) {
+	return funcGetSingleCommitPR(owner, repo, SHA)
+}
+
+func (s *repoServiceMock) GetRepoCommits(owner string, repo string) ([]github.GetCommitInfo, errors.APIError) {
+	return funcGetRepoCommits(owner, repo)
+}
+
+func (s *repoServiceMock) GetRepoSingleCommit(owner string, repo string, SHA string) (*github.GetCommitInfo, errors.APIError) {
+	return funcGetRepoSingleCommit(owner, repo, SHA)
 }
 
 func TestGetPRsNoErrorMockingEntireService(t *testing.T) {
