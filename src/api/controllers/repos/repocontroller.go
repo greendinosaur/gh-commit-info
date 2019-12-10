@@ -25,7 +25,7 @@ func GetRepoPRs(c *gin.Context) {
 		c.JSON(err.Status(), err)
 		return
 	}
-	c.JSON(http.StatusCreated, result)
+	c.JSON(http.StatusOK, result)
 }
 
 //GetRepoSinglePR returns the indicated pull request in the repo
@@ -41,7 +41,7 @@ func GetRepoSinglePR(c *gin.Context) {
 		c.JSON(err.Status(), err)
 		return
 	}
-	c.JSON(http.StatusCreated, result)
+	c.JSON(http.StatusOK, result)
 }
 
 //GetRepoCommits returns all commits for a repo
@@ -54,7 +54,7 @@ func GetRepoCommits(c *gin.Context) {
 		c.JSON(err.Status(), err)
 		return
 	}
-	c.JSON(http.StatusCreated, result)
+	c.JSON(http.StatusOK, result)
 }
 
 //GetRepoSingleCommit returns a single commit for a repo
@@ -68,7 +68,7 @@ func GetRepoSingleCommit(c *gin.Context) {
 		c.JSON(err.Status(), err)
 		return
 	}
-	c.JSON(http.StatusCreated, result)
+	c.JSON(http.StatusOK, result)
 }
 
 //GetPRsForSingleCommit returns the PRs associated to a specific commit
@@ -82,5 +82,5 @@ func GetPRsForSingleCommit(c *gin.Context) {
 		c.JSON(err.Status(), err)
 		return
 	}
-	c.JSON(http.StatusCreated, result)
+	c.JSON(http.StatusOK, result)
 }

@@ -21,6 +21,14 @@ type reposServiceInterface interface {
 	GetRepoSingleCommit(owner string, repo string, SHA string) (*github.GetCommitInfo, errors.APIError)
 }
 
+const (
+	errorInvalidOwnerParam = "invalid owner parameter"
+	errorInvalidRepoParam  = "invalid repo parameter"
+	errorInvalidScopeParam = "invalid scope parameter"
+	errorInvalidSHAParam   = "invalid SHA parameter"
+	errorInvalidPullParam  = "invalid pull parameter"
+)
+
 //RepositoryService defines the service to use
 var RepositoryService reposServiceInterface
 
@@ -42,14 +50,14 @@ func validatePRInputs(owner string, repo string, scope string) (string, string, 
 
 	if len(owner) == 0 {
 		//an error
-		return owner, repo, scope, errors.NewBadRequestError("invalid owner parameter")
+		return owner, repo, scope, errors.NewBadRequestError(errorInvalidOwnerParam)
 	}
 
 	if len(repo) == 0 {
-		return owner, repo, scope, errors.NewBadRequestError("invalid repo parameter")
+		return owner, repo, scope, errors.NewBadRequestError(errorInvalidRepoParam)
 	}
 	if len(scope) == 0 {
-		return owner, repo, scope, errors.NewBadRequestError("invalid scope parameter")
+		return owner, repo, scope, errors.NewBadRequestError(errorInvalidScopeParam)
 	}
 
 	switch scope {
@@ -61,7 +69,7 @@ func validatePRInputs(owner string, repo string, scope string) (string, string, 
 		return owner, repo, scope, nil
 	}
 	//if this far then scope is bad
-	return owner, repo, scope, errors.NewBadRequestError("invalid scope parameter")
+	return owner, repo, scope, errors.NewBadRequestError(errorInvalidScopeParam)
 
 }
 
@@ -74,18 +82,18 @@ func validateSinglePRInputs(owner string, repo string, pullNumber string) (strin
 
 	if len(owner) == 0 {
 		//an error
-		return owner, repo, pullNumber, errors.NewBadRequestError("invalid owner parameter")
+		return owner, repo, pullNumber, errors.NewBadRequestError(errorInvalidOwnerParam)
 	}
 
 	if len(repo) == 0 {
-		return owner, repo, pullNumber, errors.NewBadRequestError("invalid repo parameter")
+		return owner, repo, pullNumber, errors.NewBadRequestError(errorInvalidRepoParam)
 	}
 	if len(pullNumber) == 0 {
-		return owner, repo, pullNumber, errors.NewBadRequestError("invalid pull parameter")
+		return owner, repo, pullNumber, errors.NewBadRequestError(errorInvalidPullParam)
 	}
 
 	if _, err := strconv.ParseInt(pullNumber, 10, 64); err != nil {
-		return owner, repo, pullNumber, errors.NewBadRequestError("invalid pull parameter")
+		return owner, repo, pullNumber, errors.NewBadRequestError(errorInvalidPullParam)
 
 	}
 
@@ -102,14 +110,14 @@ func validateSingleCommitPRInputs(owner string, repo string, SHA string) (string
 
 	if len(owner) == 0 {
 		//an error
-		return owner, repo, SHA, errors.NewBadRequestError("invalid owner parameter")
+		return owner, repo, SHA, errors.NewBadRequestError(errorInvalidOwnerParam)
 	}
 
 	if len(repo) == 0 {
-		return owner, repo, SHA, errors.NewBadRequestError("invalid repo parameter")
+		return owner, repo, SHA, errors.NewBadRequestError(errorInvalidRepoParam)
 	}
 	if len(SHA) == 0 {
-		return owner, repo, SHA, errors.NewBadRequestError("invalid SHA parameter")
+		return owner, repo, SHA, errors.NewBadRequestError(errorInvalidSHAParam)
 	}
 
 	return owner, repo, SHA, nil
@@ -124,11 +132,11 @@ func validateAllommitsInputs(owner string, repo string) (string, string, errors.
 
 	if len(owner) == 0 {
 		//an error
-		return owner, repo, errors.NewBadRequestError("invalid owner parameter")
+		return owner, repo, errors.NewBadRequestError(errorInvalidOwnerParam)
 	}
 
 	if len(repo) == 0 {
-		return owner, repo, errors.NewBadRequestError("invalid repo parameter")
+		return owner, repo, errors.NewBadRequestError(errorInvalidRepoParam)
 	}
 
 	return owner, repo, nil

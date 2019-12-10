@@ -95,7 +95,7 @@ func TestGetPRsNoErrorMockingEntireService(t *testing.T) {
 
 	GetRepoPRs(c)
 
-	assert.EqualValues(t, http.StatusCreated, response.Code)
+	assert.EqualValues(t, http.StatusOK, response.Code)
 
 	result := []github.MultiplePullRequestResponse{}
 	err := json.Unmarshal(response.Body.Bytes(), &result)
@@ -181,7 +181,7 @@ func TestRepoGetSinglePRNoErrorMockingEntireService(t *testing.T) {
 
 	GetRepoSinglePR(c)
 
-	assert.EqualValues(t, http.StatusCreated, response.Code)
+	assert.EqualValues(t, http.StatusOK, response.Code)
 
 	var result github.GetSinglePullRequestResponse
 	err := json.Unmarshal(response.Body.Bytes(), &result)

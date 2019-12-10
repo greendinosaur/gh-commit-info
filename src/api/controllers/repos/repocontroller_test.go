@@ -66,7 +66,7 @@ func TestGetRepoPRsNoError(t *testing.T) {
 		URL:        "https://api.github.com/repos/myowner/myrepo/pulls?state=all",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusCreated,
+			StatusCode: http.StatusOK,
 			Body:       ioutil.NopCloser(strings.NewReader(`[{"url":"some URL","id":123456,"number":9,"state":"open","title":"Title of the PR","created_at":"2019-11-27T14:30:10.578255Z","updated_at":"2019-10-28T14:30:10.578369Z","closed_at":"2019-10-28T14:30:10.578369Z","merged_at":"2019-10-28T14:30:10.578369Z","merge_commit_sha":"ABCDEF1234567890","user":{"login":"My Login ID","id":123456,"type":"A user","site_admin":true},"assignee":{"login":"A Second Login ID","id":8767,"type":"A user","site_admin":false},"base":{"label":"A label","ref":"A Reference","sha":"ABCDEF123456768"}}]`)),
 		},
 		Err: nil,
@@ -74,7 +74,7 @@ func TestGetRepoPRsNoError(t *testing.T) {
 
 	GetRepoPRs(c)
 
-	assert.EqualValues(t, http.StatusCreated, response.Code)
+	assert.EqualValues(t, http.StatusOK, response.Code)
 
 	result := []github.MultiplePullRequestResponse{}
 	err := json.Unmarshal(response.Body.Bytes(), &result)
@@ -101,7 +101,7 @@ func TestGetRepoPRsMissingStateParam(t *testing.T) {
 		URL:        "https://api.github.com/repos/myowner/myrepo/pulls?state=all",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusCreated,
+			StatusCode: http.StatusOK,
 			Body:       ioutil.NopCloser(strings.NewReader(`[{"url":"some URL","id":123456,"number":9,"state":"open","title":"Title of the PR","created_at":"2019-11-27T14:30:10.578255Z","updated_at":"2019-10-28T14:30:10.578369Z","closed_at":"2019-10-28T14:30:10.578369Z","merged_at":"2019-10-28T14:30:10.578369Z","merge_commit_sha":"ABCDEF1234567890","user":{"login":"My Login ID","id":123456,"type":"A user","site_admin":true},"assignee":{"login":"A Second Login ID","id":8767,"type":"A user","site_admin":false},"base":{"label":"A label","ref":"A Reference","sha":"ABCDEF123456768"}}]`)),
 		},
 		Err: nil,
@@ -109,7 +109,7 @@ func TestGetRepoPRsMissingStateParam(t *testing.T) {
 
 	GetRepoPRs(c)
 
-	assert.EqualValues(t, http.StatusCreated, response.Code)
+	assert.EqualValues(t, http.StatusOK, response.Code)
 
 	result := []github.MultiplePullRequestResponse{}
 	err := json.Unmarshal(response.Body.Bytes(), &result)
@@ -164,7 +164,7 @@ func TestGetRepoSinglePRNoError(t *testing.T) {
 		URL:        "https://api.github.com/repos/myowner/myrepo/pulls/1",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusCreated,
+			StatusCode: http.StatusOK,
 			Body:       ioutil.NopCloser(strings.NewReader(`{"url":"some URL","id":123456,"number":9,"state":"open","title":"Title of the PR","created_at":"2019-11-27T14:30:10.578255Z","updated_at":"2019-10-28T14:30:10.578369Z","closed_at":"2019-10-28T14:30:10.578369Z","merged_at":"2019-10-28T14:30:10.578369Z","merge_commit_sha":"ABCDEF1234567890","user":{"login":"My Login ID","id":123456,"type":"A user","site_admin":true},"assignee":{"login":"A Second Login ID","id":8767,"type":"A user","site_admin":false},"base":{"label":"A label","ref":"A Reference","sha":"ABCDEF123456768"}}`)),
 		},
 		Err: nil,
@@ -172,7 +172,7 @@ func TestGetRepoSinglePRNoError(t *testing.T) {
 
 	GetRepoSinglePR(c)
 
-	assert.EqualValues(t, http.StatusCreated, response.Code)
+	assert.EqualValues(t, http.StatusOK, response.Code)
 
 	var result github.GetSinglePullRequestResponse
 	err := json.Unmarshal(response.Body.Bytes(), &result)
@@ -183,3 +183,5 @@ func TestGetRepoSinglePRNoError(t *testing.T) {
 	assert.EqualValues(t, "open", result.State)
 	assert.EqualValues(t, "Title of the PR", result.Title)
 }
+
+//TODO: missing tests for the three new functions

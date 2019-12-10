@@ -11,6 +11,9 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+# The localhost postman environment file
+Localhost.postman_environment.json
+
 # VS Code and other files
 .vscode
 .scannerwork
