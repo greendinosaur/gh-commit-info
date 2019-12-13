@@ -57,7 +57,7 @@ func TestGetRepoPRsErrorInvalidResponseBody(t *testing.T) {
 		URL:        "https://api.github.com/repos/test/user1/pulls?state=all",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusCreated,
+			StatusCode: http.StatusOK,
 			Body:       invalidCloser,
 		},
 	})
@@ -114,7 +114,7 @@ func TestGetRepoPRsInvalidResponse(t *testing.T) {
 		URL:        "https://api.github.com/repos/test/user1/pulls?state=all",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusCreated,
+			StatusCode: http.StatusOK,
 			Body:       ioutil.NopCloser(strings.NewReader(`{"id": "123"}`)),
 		},
 	})
@@ -133,7 +133,7 @@ func TestGetRepoPRsNoError(t *testing.T) {
 		URL:        "https://api.github.com/repos/test/user1/pulls?state=all",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusCreated,
+			StatusCode: http.StatusOK,
 			Body:       ioutil.NopCloser(strings.NewReader(`[{"url":"some URL","id":123456,"number":9,"state":"open","title":"Title of the PR","created_at":"2019-11-27T14:30:10.578255Z","updated_at":"2019-10-28T14:30:10.578369Z","closed_at":"2019-10-28T14:30:10.578369Z","merged_at":"2019-10-28T14:30:10.578369Z","merge_commit_sha":"ABCDEF1234567890","user":{"login":"My Login ID","id":123456,"type":"A user","site_admin":true},"assignee":{"login":"A Second Login ID","id":8767,"type":"A user","site_admin":false},"base":{"label":"A label","ref":"A Reference","sha":"ABCDEF123456768"}}]`)),
 		},
 	})
@@ -197,7 +197,7 @@ func TestGetRepoSinglePRErrorInvalidResponseBody(t *testing.T) {
 		URL:        "https://api.github.com/repos/test/user1/pulls/1",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusCreated,
+			StatusCode: http.StatusOK,
 			Body:       invalidCloser,
 		},
 	})
@@ -254,7 +254,7 @@ func TestGetRepoSinglePRInvalidResponse(t *testing.T) {
 		URL:        "https://api.github.com/repos/test/user1/pulls/1",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusCreated,
+			StatusCode: http.StatusOK,
 			Body:       ioutil.NopCloser(strings.NewReader(`{"id": "123"}`)),
 		},
 	})
@@ -273,7 +273,7 @@ func TestGetRepoSinglePRNoError(t *testing.T) {
 		URL:        "https://api.github.com/repos/test/user1/pulls/1",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusCreated,
+			StatusCode: http.StatusOK,
 			Body:       ioutil.NopCloser(strings.NewReader(`{"url":"some URL","id":123456,"number":9,"state":"open","title":"Title of the PR","created_at":"2019-11-27T14:30:10.578255Z","updated_at":"2019-10-28T14:30:10.578369Z","closed_at":"2019-10-28T14:30:10.578369Z","merged_at":"2019-10-28T14:30:10.578369Z","merge_commit_sha":"ABCDEF1234567890","user":{"login":"My Login ID","id":123456,"type":"A user","site_admin":true},"assignee":{"login":"A Second Login ID","id":8767,"type":"A user","site_admin":false},"base":{"label":"A label","ref":"A Reference","sha":"ABCDEF123456768"}}`)),
 		},
 	})
@@ -333,7 +333,7 @@ func TestGetGetSingleCommitPRErrorResponseBody(t *testing.T) {
 		URL:        "https://api.github.com/repos/test/user1/commits/sha123/pulls",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusCreated,
+			StatusCode: http.StatusOK,
 			Body:       ioutil.NopCloser(strings.NewReader(`{"id": "123"}`)),
 		},
 	})
@@ -351,14 +351,14 @@ func TestGetGetSingleCommitPRNoError(t *testing.T) {
 		URL:        "https://api.github.com/repos/test/user1/commits/sha123/pulls",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusCreated,
+			StatusCode: http.StatusOK,
 			Body:       ioutil.NopCloser(strings.NewReader(`[{"url":"some URL","id":123456,"number":9,"state":"open","title":"Title of the PR","created_at":"2019-11-27T14:30:10.578255Z","updated_at":"2019-10-28T14:30:10.578369Z","closed_at":"2019-10-28T14:30:10.578369Z","merged_at":"2019-10-28T14:30:10.578369Z","merge_commit_sha":"ABCDEF1234567890","user":{"login":"My Login ID","id":123456,"type":"A user","site_admin":true},"assignee":{"login":"A Second Login ID","id":8767,"type":"A user","site_admin":false},"base":{"label":"A label","ref":"A Reference","sha":"ABCDEF123456768"}}]`)),
 		},
 	})
 	response, err := GetSingleCommitPR("", "test", "user1", "sha123")
 	assert.NotNil(t, response)
 	assert.Nil(t, err)
-	assert.EqualValues(t, response[0].URL, "some URL")
-	assert.EqualValues(t, response[0].ID, 123456)
+	assert.EqualValues(t, "some URL", response[0].URL)
+	assert.EqualValues(t, 123456, response[0].ID)
 	//the JSON is tested elswhere so not doing a full set of assertions here
 }

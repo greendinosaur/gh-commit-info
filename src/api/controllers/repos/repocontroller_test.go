@@ -2,16 +2,17 @@ package repos
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/greendinosaur/gh-commit-info/src/api/clients/restclient"
-	"github.com/greendinosaur/gh-commit-info/src/api/domain/github"
+	"github.com/greendinosaur/gh-commit-info/src/api/domain/githubdomain"
+	"github.com/greendinosaur/gh-commit-info/src/api/providers/githubprovider"
 	"github.com/greendinosaur/gh-commit-info/src/api/services"
 	"github.com/greendinosaur/gh-commit-info/src/api/utils/errors"
 	"github.com/greendinosaur/gh-commit-info/src/api/utils/testutils"
@@ -37,8 +38,8 @@ func TestGetRepoPRsErrorFromGithub(t *testing.T) {
 		URL:        "https://api.github.com/repos/myowner/myrepo/pulls?state=all",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusUnauthorized,
-			Body:       ioutil.NopCloser(strings.NewReader(`{"message": "Requires authentication"}`)),
+			StatusCode: testutils.GetMockDataUnauthorisedResponseStatusCode(),
+			Body:       testutils.GetMockDataUnauthorisedResponseMessage(),
 		},
 		Err: nil,
 	})
@@ -66,8 +67,8 @@ func TestGetRepoPRsNoError(t *testing.T) {
 		URL:        "https://api.github.com/repos/myowner/myrepo/pulls?state=all",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(strings.NewReader(`[{"url":"some URL","id":123456,"number":9,"state":"open","title":"Title of the PR","created_at":"2019-11-27T14:30:10.578255Z","updated_at":"2019-10-28T14:30:10.578369Z","closed_at":"2019-10-28T14:30:10.578369Z","merged_at":"2019-10-28T14:30:10.578369Z","merge_commit_sha":"ABCDEF1234567890","user":{"login":"My Login ID","id":123456,"type":"A user","site_admin":true},"assignee":{"login":"A Second Login ID","id":8767,"type":"A user","site_admin":false},"base":{"label":"A label","ref":"A Reference","sha":"ABCDEF123456768"}}]`)),
+			StatusCode: testutils.GetMockDataPRsResponseStatusCode(),
+			Body:       testutils.GetMockDataPRsResponseMessage(),
 		},
 		Err: nil,
 	})
@@ -76,7 +77,7 @@ func TestGetRepoPRsNoError(t *testing.T) {
 
 	assert.EqualValues(t, http.StatusOK, response.Code)
 
-	result := []github.MultiplePullRequestResponse{}
+	result := []githubdomain.GetSinglePullRequestResponse{}
 	err := json.Unmarshal(response.Body.Bytes(), &result)
 	assert.Nil(t, err)
 	assert.EqualValues(t, "some URL", result[0].URL)
@@ -94,15 +95,14 @@ func TestGetRepoPRsMissingStateParam(t *testing.T) {
 	params := map[string]string{"owner": "myowner", "repo": "myrepo"}
 
 	c, _ := testutils.GetMockedContextWithParams(request, response, params)
-	//need to add in the parameters
 
 	restclient.FlushMockups()
 	restclient.AddMockup(restclient.Mock{
 		URL:        "https://api.github.com/repos/myowner/myrepo/pulls?state=all",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(strings.NewReader(`[{"url":"some URL","id":123456,"number":9,"state":"open","title":"Title of the PR","created_at":"2019-11-27T14:30:10.578255Z","updated_at":"2019-10-28T14:30:10.578369Z","closed_at":"2019-10-28T14:30:10.578369Z","merged_at":"2019-10-28T14:30:10.578369Z","merge_commit_sha":"ABCDEF1234567890","user":{"login":"My Login ID","id":123456,"type":"A user","site_admin":true},"assignee":{"login":"A Second Login ID","id":8767,"type":"A user","site_admin":false},"base":{"label":"A label","ref":"A Reference","sha":"ABCDEF123456768"}}]`)),
+			StatusCode: testutils.GetMockDataPRsResponseStatusCode(),
+			Body:       testutils.GetMockDataPRsResponseMessage(),
 		},
 		Err: nil,
 	})
@@ -111,7 +111,7 @@ func TestGetRepoPRsMissingStateParam(t *testing.T) {
 
 	assert.EqualValues(t, http.StatusOK, response.Code)
 
-	result := []github.MultiplePullRequestResponse{}
+	result := []githubdomain.GetSinglePullRequestResponse{}
 	err := json.Unmarshal(response.Body.Bytes(), &result)
 	assert.Nil(t, err)
 	assert.EqualValues(t, "some URL", result[0].URL)
@@ -135,8 +135,8 @@ func TestGetRepoSinglePRErrorFromGithub(t *testing.T) {
 		URL:        "https://api.github.com/repos/myowner/myrepo/pulls/1",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusUnauthorized,
-			Body:       ioutil.NopCloser(strings.NewReader(`{"message": "Requires authentication"}`)),
+			StatusCode: testutils.GetMockDataUnauthorisedResponseStatusCode(),
+			Body:       testutils.GetMockDataUnauthorisedResponseMessage(),
 		},
 		Err: nil,
 	})
@@ -164,8 +164,8 @@ func TestGetRepoSinglePRNoError(t *testing.T) {
 		URL:        "https://api.github.com/repos/myowner/myrepo/pulls/1",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusOK,
-			Body:       ioutil.NopCloser(strings.NewReader(`{"url":"some URL","id":123456,"number":9,"state":"open","title":"Title of the PR","created_at":"2019-11-27T14:30:10.578255Z","updated_at":"2019-10-28T14:30:10.578369Z","closed_at":"2019-10-28T14:30:10.578369Z","merged_at":"2019-10-28T14:30:10.578369Z","merge_commit_sha":"ABCDEF1234567890","user":{"login":"My Login ID","id":123456,"type":"A user","site_admin":true},"assignee":{"login":"A Second Login ID","id":8767,"type":"A user","site_admin":false},"base":{"label":"A label","ref":"A Reference","sha":"ABCDEF123456768"}}`)),
+			StatusCode: testutils.GetMockDataSinglePRResponseStatusCode(),
+			Body:       testutils.GetMockDataSinglePRResponseMessage(),
 		},
 		Err: nil,
 	})
@@ -174,7 +174,7 @@ func TestGetRepoSinglePRNoError(t *testing.T) {
 
 	assert.EqualValues(t, http.StatusOK, response.Code)
 
-	var result github.GetSinglePullRequestResponse
+	var result githubdomain.GetSinglePullRequestResponse
 	err := json.Unmarshal(response.Body.Bytes(), &result)
 	assert.Nil(t, err)
 	assert.EqualValues(t, "some URL", result.URL)
@@ -185,3 +185,258 @@ func TestGetRepoSinglePRNoError(t *testing.T) {
 }
 
 //TODO: missing tests for the three new functions
+func TestGetRepoCommitsWithError(t *testing.T) {
+	services.ResetService()
+	gin.SetMode(gin.TestMode)
+
+	response := httptest.NewRecorder()
+	request, _ := http.NewRequest(http.MethodGet, "/repos/myowner/myrepo/commits/", strings.NewReader(`{}`))
+	params := map[string]string{"owner": "myowner", "repo": "myrepo"}
+	c, _ := testutils.GetMockedContextWithParams(request, response, params)
+
+	restclient.FlushMockups()
+	restclient.AddMockup(restclient.Mock{
+		URL:        "https://api.github.com/repos/myowner/myrepo/commits",
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: testutils.GetMockDataUnauthorisedResponseStatusCode(),
+			Body:       testutils.GetMockDataUnauthorisedResponseMessage(),
+		},
+		Err: nil,
+	})
+
+	GetRepoCommits(c)
+
+	assert.EqualValues(t, http.StatusUnauthorized, response.Code)
+	apiErr, err := errors.NewAPIErrorFromBytes(response.Body.Bytes())
+	assert.Nil(t, err)
+	assert.NotNil(t, apiErr)
+	assert.EqualValues(t, http.StatusUnauthorized, apiErr.Status())
+	assert.EqualValues(t, "Requires authentication", apiErr.Message())
+}
+
+func TestGetRepoCommitsNoError(t *testing.T) {
+	services.ResetService()
+	gin.SetMode(gin.TestMode)
+
+	response := httptest.NewRecorder()
+	request, _ := http.NewRequest(http.MethodGet, "/repos/myowner/myrepo/commits/", strings.NewReader(`{}`))
+	params := map[string]string{"owner": "myowner", "repo": "myrepo"}
+	c, _ := testutils.GetMockedContextWithParams(request, response, params)
+
+	restclient.FlushMockups()
+	restclient.AddMockup(restclient.Mock{
+		URL:        "https://api.github.com/repos/myowner/myrepo/commits",
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: testutils.GetMockDataCommitsResponseStatusCode(),
+			Body:       testutils.GetMockDataCommitsResponseMessage(),
+		},
+		Err: nil,
+	})
+
+	GetRepoCommits(c)
+
+	assert.EqualValues(t, http.StatusOK, response.Code)
+	var result []githubdomain.GetCommitInfo
+	err := json.Unmarshal(response.Body.Bytes(), &result)
+	assert.Nil(t, err)
+	assert.EqualValues(t, "http://www.github.com", result[0].URL)
+	assert.EqualValues(t, "AABCDEF123456", result[0].SHA)
+}
+
+func TestGetRepoSingleCommitGithubError(t *testing.T) {
+	services.ResetService()
+	gin.SetMode(gin.TestMode)
+
+	response := httptest.NewRecorder()
+	request, _ := http.NewRequest(http.MethodGet, "/repos/myowner/myrepo/commits/SHA123", strings.NewReader(`{}`))
+	params := map[string]string{"owner": "myowner", "repo": "myrepo", "sha": "SHA123"}
+	c, _ := testutils.GetMockedContextWithParams(request, response, params)
+
+	restclient.FlushMockups()
+	restclient.AddMockup(restclient.Mock{
+		URL:        "https://api.github.com/repos/myowner/myrepo/commits/SHA123",
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: testutils.GetMockDataUnauthorisedResponseStatusCode(),
+			Body:       testutils.GetMockDataUnauthorisedResponseMessage(),
+		},
+		Err: nil,
+	})
+
+	GetRepoSingleCommit(c)
+
+	assert.EqualValues(t, http.StatusUnauthorized, response.Code)
+	apiErr, err := errors.NewAPIErrorFromBytes(response.Body.Bytes())
+	assert.Nil(t, err)
+	assert.NotNil(t, apiErr)
+	assert.EqualValues(t, http.StatusUnauthorized, apiErr.Status())
+	assert.EqualValues(t, "Requires authentication", apiErr.Message())
+}
+
+func TestGetRepoSingleCommitNoError(t *testing.T) {
+	services.ResetService()
+	gin.SetMode(gin.TestMode)
+
+	response := httptest.NewRecorder()
+	request, _ := http.NewRequest(http.MethodGet, "/repos/myowner/myrepo/commits/AABCDEF123456", strings.NewReader(`{}`))
+	params := map[string]string{"owner": "myowner", "repo": "myrepo", "sha": "AABCDEF123456"}
+	c, _ := testutils.GetMockedContextWithParams(request, response, params)
+
+	restclient.FlushMockups()
+	restclient.AddMockup(restclient.Mock{
+		URL:        "https://api.github.com/repos/myowner/myrepo/commits/AABCDEF123456",
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: testutils.GetMockDataSingleCommitResponseStatusCode(),
+			Body:       testutils.GetMockDataSingleCommitResponseMessage(),
+		},
+		Err: nil,
+	})
+
+	GetRepoSingleCommit(c)
+
+	assert.EqualValues(t, http.StatusOK, response.Code)
+	var result githubdomain.GetCommitInfo
+	err := json.Unmarshal(response.Body.Bytes(), &result)
+	assert.Nil(t, err)
+	assert.EqualValues(t, "http://www.github.com", result.URL)
+	assert.EqualValues(t, "AABCDEF123456", result.SHA)
+}
+
+func TestGetPRsForSingleCommitInvalidResponse(t *testing.T) {
+	services.ResetService()
+	gin.SetMode(gin.TestMode)
+
+	response := httptest.NewRecorder()
+	request, _ := http.NewRequest(http.MethodGet, "/repos/myowner/myrepo/commits/SHA123/pulls", strings.NewReader(`{}`))
+	params := map[string]string{"owner": "myowner", "repo": "myrepo", "sha": "SHA123"}
+	c, _ := testutils.GetMockedContextWithParams(request, response, params)
+
+	restclient.FlushMockups()
+	restclient.AddMockup(restclient.Mock{
+		URL:        "https://api.github.com/repos/myowner/myrepo/commits/SHA123/pulls",
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: testutils.GetMockDataUnauthorisedResponseStatusCode(),
+			Body:       testutils.GetMockDataUnauthorisedResponseMessage(),
+		},
+		Err: nil,
+	})
+
+	GetPRsForSingleCommit(c)
+
+	assert.EqualValues(t, http.StatusUnauthorized, response.Code)
+	apiErr, err := errors.NewAPIErrorFromBytes(response.Body.Bytes())
+	assert.Nil(t, err)
+	assert.NotNil(t, apiErr)
+	assert.EqualValues(t, http.StatusUnauthorized, apiErr.Status())
+	assert.EqualValues(t, "Requires authentication", apiErr.Message())
+}
+
+func TestGetPRsForSingleCommitNoError(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	services.ResetService()
+	response := httptest.NewRecorder()
+	request, _ := http.NewRequest(http.MethodGet, "/repos/myowner/myrepo/commits/SHA123/pulls", strings.NewReader(`{}`))
+	params := map[string]string{"owner": "myowner", "repo": "myrepo", "sha": "SHA123"}
+	c, _ := testutils.GetMockedContextWithParams(request, response, params)
+
+	restclient.FlushMockups()
+	restclient.AddMockup(restclient.Mock{
+		URL:        "https://api.github.com/repos/myowner/myrepo/commits/SHA123/pulls",
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: testutils.GetMockDataPRsResponseStatusCode(),
+			Body:       testutils.GetMockDataPRsResponseMessage(),
+		},
+		Err: nil,
+	})
+
+	GetPRsForSingleCommit(c)
+
+	assert.EqualValues(t, http.StatusOK, response.Code)
+
+	result := []githubdomain.GetSinglePullRequestResponse{}
+	err := json.Unmarshal(response.Body.Bytes(), &result)
+	assert.Nil(t, err)
+	assert.EqualValues(t, "some URL", result[0].URL)
+	assert.EqualValues(t, 123456, result[0].ID)
+	assert.EqualValues(t, 9, result[0].Number)
+	assert.EqualValues(t, "open", result[0].State)
+	assert.EqualValues(t, "Title of the PR", result[0].Title)
+}
+
+func TestGetCodeReviewReportError(t *testing.T) {
+	services.ResetService()
+	gin.SetMode(gin.TestMode)
+
+	response := httptest.NewRecorder()
+	request, _ := http.NewRequest(http.MethodGet, "/codereview/myowner/myrepo", strings.NewReader(`{}`))
+	params := map[string]string{"owner": "myowner", "repo": "myrepo"}
+	c, _ := testutils.GetMockedContextWithParams(request, response, params)
+
+	fromDate := time.Now().UTC().AddDate(-1, 0, 0)
+	toDate := time.Now().UTC()
+	urlForMock := "https://api.github.com/repos/myowner/myrepo/commits?since=" + fromDate.UTC().Format(githubprovider.FmtGithubDate) + "&until=" + toDate.UTC().Format(githubprovider.FmtGithubDate)
+
+	restclient.FlushMockups()
+	restclient.AddMockup(restclient.Mock{
+		URL:        urlForMock,
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: testutils.GetMockDataUnauthorisedResponseStatusCode(),
+			Body:       testutils.GetMockDataUnauthorisedResponseMessage(),
+		},
+		Err: nil,
+	})
+
+	GetCodeReviewReport(c)
+
+	assert.EqualValues(t, http.StatusUnauthorized, response.Code)
+	apiErr, err := errors.NewAPIErrorFromBytes(response.Body.Bytes())
+	assert.Nil(t, err)
+	assert.NotNil(t, apiErr)
+	assert.EqualValues(t, http.StatusUnauthorized, apiErr.Status())
+	assert.EqualValues(t, "Requires authentication", apiErr.Message())
+}
+
+func TestCodeReviewReportNoError(t *testing.T) {
+	services.ResetService()
+	gin.SetMode(gin.TestMode)
+
+	response := httptest.NewRecorder()
+	request, _ := http.NewRequest(http.MethodGet, "/codereview/myuser/myrepo", strings.NewReader(`{}`))
+	params := map[string]string{"owner": "myuser", "repo": "myrepo"}
+	c, _ := testutils.GetMockedContextWithParams(request, response, params)
+
+	restclient.FlushMockups()
+	fromDate := time.Now().UTC().AddDate(-1, 0, 0)
+	toDate := time.Now().UTC()
+	urlForMock := "https://api.github.com/repos/myuser/myrepo/commits?since=" + fromDate.UTC().Format(githubprovider.FmtGithubDate) + "&until=" + toDate.UTC().Format(githubprovider.FmtGithubDate)
+
+	restclient.AddMockup(restclient.Mock{
+		URL:        urlForMock,
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: testutils.GetMockDataSingleCommitResponseStatusCode(),
+			Body:       testutils.GetMockDataSingleSliceNonMergeCommitResponsesMessage(),
+		},
+	})
+
+	restclient.AddMockup(restclient.Mock{
+		URL:        "https://api.github.com/repos/myuser/myrepo/commits/AABCDEF123456/pulls",
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: testutils.GetMockDataSingleCommitResponseStatusCode(),
+			Body:       testutils.GetMockDataApprovedPRForCommitResponsesMessage(),
+		},
+	})
+
+	GetCodeReviewReport(c)
+
+	result := string(response.Body.Bytes())
+	assert.EqualValues(t, "#Total Commits: 1, #Merged Commits: 0,  #Commits with PRs: 1, #Non-merge commits with no PR: 0", result)
+
+}

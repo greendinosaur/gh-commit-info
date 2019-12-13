@@ -50,7 +50,7 @@ func AddMockup(mock Mock) {
 }
 
 func getMockResponse(method string, URL string) (*http.Response, error) {
-	mock := mocks[getMockID(http.MethodGet, URL)]
+	mock := mocks[getMockID(method, URL)]
 
 	if mock == nil {
 		return nil, errors.New(missingMock)
@@ -76,7 +76,7 @@ func getContent(method string, URL string, body interface{}, headers http.Header
 func Post(URL string, body interface{}, headers http.Header) (*http.Response, error) {
 
 	if enabledMocks {
-		return getMockResponse(http.MethodGet, URL)
+		return getMockResponse(http.MethodPost, URL)
 	}
 
 	return getContent(http.MethodPost, URL, body, headers)

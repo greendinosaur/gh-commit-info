@@ -1,4 +1,4 @@
-package github
+package githubdomain
 
 import "time"
 
@@ -30,21 +30,4 @@ type RepoBase struct {
 	Label string `json:"label"`
 	Ref   string `json:"ref"`
 	SHA   string `json:"sha"`
-}
-
-//MultiplePullRequestResponse represents multiple pull requests
-type MultiplePullRequestResponse struct {
-	URL            string    `json:"url"`
-	ID             int       `json:"id"`
-	Number         int       `json:"number"`
-	State          string    `json:"state"`
-	Title          string    `json:"title"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
-	ClosedAt       time.Time `json:"closed_at"`
-	MergedAt       time.Time `json:"merged_at"`
-	MergeCommitSHA string    `json:"merge_commit_sha"`
-	User           GitUser   `json:"user"`
-	Assignee       GitUser   `json:"assignee"`
-	Base           RepoBase  `json:"base"`
 }

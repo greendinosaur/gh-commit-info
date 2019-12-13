@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/greendinosaur/gh-commit-info/src/api/domain/github"
+	"github.com/greendinosaur/gh-commit-info/src/api/domain/githubdomain"
 	"github.com/greendinosaur/gh-commit-info/src/api/services"
 	"github.com/greendinosaur/gh-commit-info/src/api/utils/errors"
 	"github.com/greendinosaur/gh-commit-info/src/api/utils/testutils"
@@ -17,59 +17,64 @@ import (
 )
 
 var (
-	funcGetRepoPRs          func(owner string, repo string, scope string) ([]github.MultiplePullRequestResponse, errors.APIError)
-	funcGetRepoSinglePR     func(owner string, repo string, pullRequst string) (*github.GetSinglePullRequestResponse, errors.APIError)
-	funcGetSingleCommitPR   func(owner string, repo string, SHA string) ([]github.MultiplePullRequestResponse, errors.APIError)
-	funcGetRepoCommits      func(owner string, repo string) ([]github.GetCommitInfo, errors.APIError)
-	funcGetRepoSingleCommit func(owner string, repo string, SHA string) (*github.GetCommitInfo, errors.APIError)
+	funcGetRepoPRs          func(owner string, repo string, scope string) ([]githubdomain.GetSinglePullRequestResponse, errors.APIError)
+	funcGetRepoSinglePR     func(owner string, repo string, pullRequst string) (*githubdomain.GetSinglePullRequestResponse, errors.APIError)
+	funcGetSingleCommitPR   func(owner string, repo string, SHA string) ([]githubdomain.GetSinglePullRequestResponse, errors.APIError)
+	funcGetRepoCommits      func(owner string, repo string) ([]githubdomain.GetCommitInfo, errors.APIError)
+	funcGetRepoSingleCommit func(owner string, repo string, SHA string) (*githubdomain.GetCommitInfo, errors.APIError)
+	funcGetCodeReviewReport func(owner string, repo string, fromDate time.Time, endDate time.Time) (string, errors.APIError)
 )
 
 type repoServiceMock struct{}
 
-func (s *repoServiceMock) GetRepoPRs(owner string, repo string, scope string) ([]github.MultiplePullRequestResponse, errors.APIError) {
+func (s *repoServiceMock) GetRepoPRs(owner string, repo string, scope string) ([]githubdomain.GetSinglePullRequestResponse, errors.APIError) {
 	return funcGetRepoPRs(owner, repo, scope)
 }
 
-func (s *repoServiceMock) GetRepoSinglePR(owner string, repo string, pullRequest string) (*github.GetSinglePullRequestResponse, errors.APIError) {
+func (s *repoServiceMock) GetRepoSinglePR(owner string, repo string, pullRequest string) (*githubdomain.GetSinglePullRequestResponse, errors.APIError) {
 	return funcGetRepoSinglePR(owner, repo, pullRequest)
 }
 
-func (s *repoServiceMock) GetSingleCommitPR(owner string, repo string, SHA string) ([]github.MultiplePullRequestResponse, errors.APIError) {
+func (s *repoServiceMock) GetSingleCommitPR(owner string, repo string, SHA string) ([]githubdomain.GetSinglePullRequestResponse, errors.APIError) {
 	return funcGetSingleCommitPR(owner, repo, SHA)
 }
 
-func (s *repoServiceMock) GetRepoCommits(owner string, repo string) ([]github.GetCommitInfo, errors.APIError) {
+func (s *repoServiceMock) GetRepoCommits(owner string, repo string) ([]githubdomain.GetCommitInfo, errors.APIError) {
 	return funcGetRepoCommits(owner, repo)
 }
 
-func (s *repoServiceMock) GetRepoSingleCommit(owner string, repo string, SHA string) (*github.GetCommitInfo, errors.APIError) {
+func (s *repoServiceMock) GetRepoSingleCommit(owner string, repo string, SHA string) (*githubdomain.GetCommitInfo, errors.APIError) {
 	return funcGetRepoSingleCommit(owner, repo, SHA)
+}
+
+func (s *repoServiceMock) GetCodeReviewReport(owner string, repo string, fromDate time.Time, endDate time.Time) (string, errors.APIError) {
+	return funcGetCodeReviewReport(owner, repo, fromDate, endDate)
 }
 
 func TestGetPRsNoErrorMockingEntireService(t *testing.T) {
 	services.RepositoryService = &repoServiceMock{}
 
-	funcGetRepoPRs = func(owner string, repo string, scope string) ([]github.MultiplePullRequestResponse, errors.APIError) {
-		repoBase := github.RepoBase{
+	funcGetRepoPRs = func(owner string, repo string, scope string) ([]githubdomain.GetSinglePullRequestResponse, errors.APIError) {
+		repoBase := githubdomain.RepoBase{
 			Label: "A label",
 			Ref:   "A Reference",
 			SHA:   "ABCDEF123456768",
 		}
 
-		gitUser1 := github.GitUser{
+		gitUser1 := githubdomain.GitUser{
 			Login:     "My Login ID",
 			ID:        123456,
 			Type:      "A user",
 			SiteAdmin: true,
 		}
 
-		gitUser2 := github.GitUser{
+		gitUser2 := githubdomain.GitUser{
 			Login:     "A Second Login ID",
 			ID:        8767,
 			Type:      "A user",
 			SiteAdmin: false,
 		}
-		getMultiplePullRequestResponse := github.MultiplePullRequestResponse{
+		getMultiplePullRequestResponse := githubdomain.GetSinglePullRequestResponse{
 			URL:            "some URL",
 			ID:             123456,
 			Number:         9,
@@ -84,7 +89,7 @@ func TestGetPRsNoErrorMockingEntireService(t *testing.T) {
 			Assignee:       gitUser2,
 			Base:           repoBase,
 		}
-		result1 := []github.MultiplePullRequestResponse{getMultiplePullRequestResponse}
+		result1 := []githubdomain.GetSinglePullRequestResponse{getMultiplePullRequestResponse}
 		return result1, nil
 	}
 
@@ -97,7 +102,7 @@ func TestGetPRsNoErrorMockingEntireService(t *testing.T) {
 
 	assert.EqualValues(t, http.StatusOK, response.Code)
 
-	result := []github.MultiplePullRequestResponse{}
+	result := []githubdomain.GetSinglePullRequestResponse{}
 	err := json.Unmarshal(response.Body.Bytes(), &result)
 	assert.Nil(t, err)
 	assert.EqualValues(t, "some URL", result[0].URL)
@@ -111,7 +116,7 @@ func TestGetPRsNoErrorMockingEntireService(t *testing.T) {
 func TestGetPRGithubErrorMockingEntireService(t *testing.T) {
 	services.RepositoryService = &repoServiceMock{}
 
-	funcGetRepoPRs = func(owner string, repo string, scope string) ([]github.MultiplePullRequestResponse, errors.APIError) {
+	funcGetRepoPRs = func(owner string, repo string, scope string) ([]githubdomain.GetSinglePullRequestResponse, errors.APIError) {
 
 		return nil, errors.NewBadRequestError("invalid owner parameter")
 	}
@@ -136,27 +141,27 @@ func TestGetPRGithubErrorMockingEntireService(t *testing.T) {
 func TestRepoGetSinglePRNoErrorMockingEntireService(t *testing.T) {
 	services.RepositoryService = &repoServiceMock{}
 
-	funcGetRepoSinglePR = func(owner string, repo string, pullRequest string) (*github.GetSinglePullRequestResponse, errors.APIError) {
-		repoBase := github.RepoBase{
+	funcGetRepoSinglePR = func(owner string, repo string, pullRequest string) (*githubdomain.GetSinglePullRequestResponse, errors.APIError) {
+		repoBase := githubdomain.RepoBase{
 			Label: "A label",
 			Ref:   "A Reference",
 			SHA:   "ABCDEF123456768",
 		}
 
-		gitUser1 := github.GitUser{
+		gitUser1 := githubdomain.GitUser{
 			Login:     "My Login ID",
 			ID:        123456,
 			Type:      "A user",
 			SiteAdmin: true,
 		}
 
-		gitUser2 := github.GitUser{
+		gitUser2 := githubdomain.GitUser{
 			Login:     "A Second Login ID",
 			ID:        8767,
 			Type:      "A user",
 			SiteAdmin: false,
 		}
-		getPRInfoResponse := github.GetSinglePullRequestResponse{
+		getPRInfoResponse := githubdomain.GetSinglePullRequestResponse{
 			URL:            "some URL",
 			ID:             123456,
 			Number:         9,
@@ -183,7 +188,7 @@ func TestRepoGetSinglePRNoErrorMockingEntireService(t *testing.T) {
 
 	assert.EqualValues(t, http.StatusOK, response.Code)
 
-	var result github.GetSinglePullRequestResponse
+	var result githubdomain.GetSinglePullRequestResponse
 	err := json.Unmarshal(response.Body.Bytes(), &result)
 	assert.Nil(t, err)
 	assert.EqualValues(t, "some URL", result.URL)
@@ -197,7 +202,7 @@ func TestRepoGetSinglePRNoErrorMockingEntireService(t *testing.T) {
 func TestGetRepoSinglePRGithubErrorMockingEntireService(t *testing.T) {
 	services.RepositoryService = &repoServiceMock{}
 
-	funcGetRepoSinglePR = func(owner string, repo string, pullRequest string) (*github.GetSinglePullRequestResponse, errors.APIError) {
+	funcGetRepoSinglePR = func(owner string, repo string, pullRequest string) (*githubdomain.GetSinglePullRequestResponse, errors.APIError) {
 
 		return nil, errors.NewBadRequestError("invalid pull parameter")
 	}

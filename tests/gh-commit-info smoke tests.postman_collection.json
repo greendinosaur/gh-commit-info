@@ -363,6 +363,51 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "get code review report",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "b36c2909-4784-4a9c-87e1-86af3d8ef24c",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Body matches string\", function () {",
+							"    pm.expect(pm.response.text()).to.include(\"#Total Commits\");",
+							"});",
+							"",
+							"pm.test(\"Content-Type is text\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"    pm.response.to.be.header(\"Content-Type\", \"text/plain\");",
+							"",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://{{BASE_URL}}/codereview/{{OWNER}}/{{REPO}}",
+					"protocol": "http",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"codereview",
+						"{{OWNER}}",
+						"{{REPO}}"
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"protocolProfileBehavior": {}

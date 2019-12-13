@@ -1,4 +1,4 @@
-package github
+package githubdomain
 
 //GitUser stores info about a user
 //Is referenced in both Pull Requests and Commits

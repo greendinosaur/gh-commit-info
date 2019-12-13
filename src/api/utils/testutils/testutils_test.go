@@ -47,3 +47,5 @@ func TestGetMockedConstantParams(t *testing.T) {
 	assert.EqualValues(t, "all", c.Param("state"))
 
 }
+
+

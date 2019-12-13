@@ -35,22 +35,22 @@ func TestAPIError(t *testing.T) {
 func TestNewNotFoundAPIError(t *testing.T) {
 	apiError := NewNotFoundAPIError("Some Message")
 	assert.NotNil(t, apiError)
-	assert.EqualValues(t, apiError.Message(), "Some Message")
-	assert.EqualValues(t, apiError.Status(), http.StatusNotFound)
+	assert.EqualValues(t, "Some Message", apiError.Message())
+	assert.EqualValues(t, http.StatusNotFound, apiError.Status())
 }
 
 func TestNewInternalServerError(t *testing.T) {
 	apiError := NewInternalServerError("Some Message")
 	assert.NotNil(t, apiError)
-	assert.EqualValues(t, apiError.Message(), "Some Message")
-	assert.EqualValues(t, apiError.Status(), http.StatusInternalServerError)
+	assert.EqualValues(t, "Some Message", apiError.Message())
+	assert.EqualValues(t, http.StatusInternalServerError, apiError.Status())
 }
 
 func TestNewBadRequestError(t *testing.T) {
 	apiError := NewBadRequestError("Some Message")
 	assert.NotNil(t, apiError)
-	assert.EqualValues(t, apiError.Message(), "Some Message")
-	assert.EqualValues(t, apiError.Status(), http.StatusBadRequest)
+	assert.EqualValues(t, "Some Message", apiError.Message())
+	assert.EqualValues(t, http.StatusBadRequest, apiError.Status())
 }
 
 func TestNewAPIErrorFromBytesValidJSON(t *testing.T) {
@@ -85,6 +85,6 @@ func TestNewAPIErrorFromBytesInValidJSON(t *testing.T) {
 func TestNewAPIError(t *testing.T) {
 	apiError := NewAPIError(123, "Some Message")
 	assert.NotNil(t, apiError)
-	assert.EqualValues(t, apiError.Message(), "Some Message")
-	assert.EqualValues(t, apiError.Status(), 123)
+	assert.EqualValues(t, "Some Message", apiError.Message())
+	assert.EqualValues(t, 123, apiError.Status())
 }

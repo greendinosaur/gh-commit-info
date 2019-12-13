@@ -1,4 +1,4 @@
-package github
+package githubdomain
 
 import (
 	"encoding/json"
@@ -27,29 +27,6 @@ func TestRepoBase(t *testing.T) {
 	assert.EqualValues(t, repoBase.Label, target.Label)
 	assert.EqualValues(t, repoBase.Ref, target.Ref)
 	assert.EqualValues(t, repoBase.SHA, target.SHA)
-}
-
-func TestGitUser(t *testing.T) {
-	gitUser := GitUser{
-		Login:     "My Login ID",
-		ID:        123456,
-		Type:      "A user",
-		SiteAdmin: true,
-	}
-
-	bytes, err := json.Marshal(gitUser)
-	assert.Nil(t, err)
-	assert.NotNil(t, bytes)
-
-	var target GitUser
-
-	err = json.Unmarshal(bytes, &target)
-	assert.Nil(t, err)
-	assert.NotNil(t, &target)
-	assert.EqualValues(t, gitUser.Login, target.Login)
-	assert.EqualValues(t, gitUser.ID, target.ID)
-	assert.EqualValues(t, gitUser.Type, target.Type)
-	assert.EqualValues(t, gitUser.SiteAdmin, target.SiteAdmin)
 }
 
 func TestGetPullRequestInfoResponse(t *testing.T) {
@@ -123,7 +100,7 @@ func TestMultiplePullRequestResponse(t *testing.T) {
 
 	bytes := []byte(jsonAsString)
 
-	target := []MultiplePullRequestResponse{}
+	target := []GetSinglePullRequestResponse{}
 
 	err := json.Unmarshal(bytes, &target)
 	assert.Nil(t, err)

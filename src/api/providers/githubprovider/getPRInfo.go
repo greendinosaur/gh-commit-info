@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/greendinosaur/gh-commit-info/src/api/domain/github"
+	"github.com/greendinosaur/gh-commit-info/src/api/domain/githubdomain"
 )
 
 //information needed to get PR data from Github
@@ -17,7 +17,7 @@ const (
 )
 
 //GetRepoSinglePR returns the given PR for a repo
-func GetRepoSinglePR(accessToken string, owner string, repo string, pullNumber string) (*github.GetSinglePullRequestResponse, *github.GithubErrorResponse) {
+func GetRepoSinglePR(accessToken string, owner string, repo string, pullNumber string) (*githubdomain.GetSinglePullRequestResponse, *githubdomain.GithubErrorResponse) {
 
 	//setup the end point to call including the headers
 	URL := fmt.Sprintf(urlGetRepoSinglePR, owner, repo, pullNumber)
@@ -32,17 +32,17 @@ func GetRepoSinglePR(accessToken string, owner string, repo string, pullNumber s
 	}
 
 	//now we have a response, need to unmarshal it and return the results
-	var result github.GetSinglePullRequestResponse
+	var result githubdomain.GetSinglePullRequestResponse
 
 	if err := json.Unmarshal(bytes, &result); err != nil {
-		log.Println(fmt.Sprintf("error when trying to unmarshal successful response: %s", err.Error()))
+		log.Println(fmt.Sprintf(errorUnmarshallingResponse, err.Error()))
 		return nil, getUnmarshalBodyError()
 	}
 	return &result, nil
 }
 
 //getRepoPRsFromURL is used to return more than one pull request
-func getRepoPRsFromURL(URL string, headers http.Header) ([]github.MultiplePullRequestResponse, *github.GithubErrorResponse) {
+func getRepoPRsFromURL(URL string, headers http.Header) ([]githubdomain.GetSinglePullRequestResponse, *githubdomain.GithubErrorResponse) {
 
 	bytes, err := getDataFromGithubAPI(URL, headers)
 
@@ -51,9 +51,9 @@ func getRepoPRsFromURL(URL string, headers http.Header) ([]github.MultiplePullRe
 	}
 
 	//now we have the response, unmarshal it back into the correct object to return
-	var result []github.MultiplePullRequestResponse
+	var result []githubdomain.GetSinglePullRequestResponse
 	if err := json.Unmarshal(bytes, &result); err != nil {
-		log.Println(fmt.Sprintf("error when trying to unmarshal successful PR response: %s", err.Error()))
+		log.Println(fmt.Sprintf(errorUnmarshallingResponse, err.Error()))
 		return nil, getUnmarshalBodyError()
 	}
 	return result, nil
@@ -61,10 +61,10 @@ func getRepoPRsFromURL(URL string, headers http.Header) ([]github.MultiplePullRe
 }
 
 //GetRepoPRs returns all of the PRs in the given repo
-func GetRepoPRs(accessToken string, owner string, repo string, state string) ([]github.MultiplePullRequestResponse, *github.GithubErrorResponse) {
+func GetRepoPRs(accessToken string, owner string, repo string, state string) ([]githubdomain.GetSinglePullRequestResponse, *githubdomain.GithubErrorResponse) {
 
 	//need to construct the URL to call and also the headers to send
-	//these vary depending on the API call being made as described in the github API documentation
+	//these vary depending on the API call being made as described in the githubdomain API documentation
 	URL := fmt.Sprintf(urlGetRepoPRs, owner, repo, state)
 
 	headers := getCommonHeader(accessToken)
@@ -74,7 +74,7 @@ func GetRepoPRs(accessToken string, owner string, repo string, state string) ([]
 }
 
 //GetSingleCommitPR returns all the PRs associated with a single commit SHA
-func GetSingleCommitPR(accessToken string, owner string, repo string, SHA string) ([]github.MultiplePullRequestResponse, *github.GithubErrorResponse) {
+func GetSingleCommitPR(accessToken string, owner string, repo string, SHA string) ([]githubdomain.GetSinglePullRequestResponse, *githubdomain.GithubErrorResponse) {
 
 	//construct the URL and headers
 	//these can vary depending on the end point being called
