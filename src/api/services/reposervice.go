@@ -291,6 +291,7 @@ func (s *reposService) GetCodeReviewReport(owner string, repo string, fromDate t
 	//create an array where we can store indices for those commits that aren't merge commits and have no PRs
 	var indexCommitsWithNoPR []int
 
+	//firstly, get hold of all the commits of interest
 	repoCommits, err := getRepoCommitsInDateRange(owner, repo, fromDate, endDate)
 
 	if err != nil {
@@ -299,45 +300,40 @@ func (s *reposService) GetCodeReviewReport(owner string, repo string, fromDate t
 
 	//now we can loop over each commit and get hold of the associated PRs
 	for commitCounter, repoCommitInfo := range repoCommits {
-		//check for the merge and store this
-		isMergeCommit := isMergeCommit(&repoCommitInfo)
-		repoCommitInfo.IsMergeCommit = isMergeCommit
 
-		if isMergeCommit {
+		repoCommitInfo.IsMergeCommit = isMergeCommit(&repoCommitInfo)
+		if repoCommitInfo.IsMergeCommit {
 			totalMergeCommits++
 		}
 
 		//now get the associated PRs and find one that has been closed and has a merge commit
 		//may be multiple PRs associated with this commit
-		//still making assumption feature branches are created, then a PR and merge into master
-		//so simple feature branching with development on master
-		//cater for other scenarios later
 		pullsForCommit, err := RepositoryService.GetSingleCommitPR(owner, repo, repoCommitInfo.SHA)
 
 		if err != nil {
 			return "", err
 		}
-
-		if len(pullsForCommit) == 0 {
+		//now we have the array of PRs iterate through and see if there is a merged and closed PR
+		//assume there is only one PR so will break the loop once found
+		isApprovedPR := false
+		for _, pull := range pullsForCommit {
+			if isPRResultingInMerge(&pull) {
+				repoCommitInfo.PRForMerge = &pull
+				totalCommitsWithPR++
+				isApprovedPR = true
+				break
+			}
+		}
+		if isApprovedPR == false {
 			//no PR associated with this commit so need to store for reporting purposes
 			indexCommitsWithNoPR = append(indexCommitsWithNoPR, commitCounter)
 			totalCommitsWithNoPR++
-		} else {
-			//now we have the array of PRs iterate through and see if there is a merged and closed PR
-			for _, pull := range pullsForCommit {
-				if isPRResultingInMerge(&pull) {
-					//put details of this PR into the commit for later reporting
-					repoCommitInfo.PRForMerge = &pull
-					totalCommitsWithPR++
-					//TODO: what if multiple PRs? does this happen?
-				}
-			}
 		}
 
 	}
 
 	//can now summarise the information and return this
-	summaryInfo := fmt.Sprintf("#Total Commits: %d, #Merged Commits: %d,  #Commits with PRs: %d, #Non-merge commits with no PR: %d",
+	summaryInfo := fmt.Sprintf("#Total Commits: %d, #Merged Commits: %d,  #Commits with PRs: %d, #Commits with No PRs: %d",
 		len(repoCommits), totalMergeCommits, totalCommitsWithPR, totalCommitsWithNoPR)
 
 	return summaryInfo, nil

@@ -437,6 +437,6 @@ func TestCodeReviewReportNoError(t *testing.T) {
 	GetCodeReviewReport(c)
 
 	result := string(response.Body.Bytes())
-	assert.EqualValues(t, "#Total Commits: 1, #Merged Commits: 0,  #Commits with PRs: 1, #Non-merge commits with no PR: 0", result)
+	assert.EqualValues(t, "#Total Commits: 1, #Merged Commits: 0,  #Commits with PRs: 1, #Commits with No PRs: 0", result)
 
 }

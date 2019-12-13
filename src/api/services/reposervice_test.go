@@ -675,7 +675,7 @@ func TestGetCodeReviewReportSuccessMergeCommit(t *testing.T) {
 	response, err := RepositoryService.GetCodeReviewReport("myuser", "myrepo", fromDate, toDate)
 	assert.NotNil(t, response)
 	assert.Nil(t, err)
-	assert.EqualValues(t, "#Total Commits: 1, #Merged Commits: 1,  #Commits with PRs: 1, #Non-merge commits with no PR: 0", response)
+	assert.EqualValues(t, "#Total Commits: 1, #Merged Commits: 1,  #Commits with PRs: 1, #Commits with No PRs: 0", response)
 }
 
 func TestGetCodeReviewReportSuccessCommitWithPR(t *testing.T) {
@@ -706,7 +706,7 @@ func TestGetCodeReviewReportSuccessCommitWithPR(t *testing.T) {
 	response, err := RepositoryService.GetCodeReviewReport("myuser", "myrepo", fromDate, toDate)
 	assert.NotNil(t, response)
 	assert.Nil(t, err)
-	assert.EqualValues(t, "#Total Commits: 1, #Merged Commits: 0,  #Commits with PRs: 1, #Non-merge commits with no PR: 0", response)
+	assert.EqualValues(t, "#Total Commits: 1, #Merged Commits: 0,  #Commits with PRs: 1, #Commits with No PRs: 0", response)
 
 }
 
@@ -738,6 +738,39 @@ func TestGetCodeReviewReportSuccessCommitWithNoPR(t *testing.T) {
 	response, err := RepositoryService.GetCodeReviewReport("myuser", "myrepo", fromDate, toDate)
 	assert.NotNil(t, response)
 	assert.Nil(t, err)
-	assert.EqualValues(t, "#Total Commits: 1, #Merged Commits: 0,  #Commits with PRs: 0, #Non-merge commits with no PR: 1", response)
+	assert.EqualValues(t, "#Total Commits: 1, #Merged Commits: 0,  #Commits with PRs: 0, #Commits with No PRs: 1", response)
+
+}
+
+
+func TestGetCodeReviewReportSuccessCommitWithNonApprovedPR(t *testing.T) {
+	//need to have test data where there is a commit with an unapproved PR
+	restclient.FlushMockups()
+	fromDate := time.Now().UTC().AddDate(-1, 0, 0)
+	toDate := time.Now().UTC()
+	urlForMock := "https://api.github.com/repos/myuser/myrepo/commits?since=" + fromDate.UTC().Format(githubprovider.FmtGithubDate) + "&until=" + toDate.UTC().Format(githubprovider.FmtGithubDate)
+
+	restclient.AddMockup(restclient.Mock{
+		URL:        urlForMock,
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: testutils.GetMockDataSingleCommitResponseStatusCode(),
+			Body:       testutils.GetMockDataSingleSliceCommitResponsesMessage(),
+		},
+	})
+
+	restclient.AddMockup(restclient.Mock{
+		URL:        "https://api.github.com/repos/myuser/myrepo/commits/AABCDEF123456/pulls",
+		HTTPMethod: http.MethodGet,
+		Response: &http.Response{
+			StatusCode: testutils.GetMockDataSingleCommitResponseStatusCode(),
+			Body:       testutils.GetMockDataClosedPRForCommitResponsesMessage(),
+		},
+	})
+
+	response, err := RepositoryService.GetCodeReviewReport("myuser", "myrepo", fromDate, toDate)
+	assert.NotNil(t, response)
+	assert.Nil(t, err)
+	assert.EqualValues(t, "#Total Commits: 1, #Merged Commits: 1,  #Commits with PRs: 0, #Commits with No PRs: 1", response)
 
 }
