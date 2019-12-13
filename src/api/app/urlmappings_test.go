@@ -1,16 +1,15 @@
 package app
 
 import (
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/greendinosaur/gh-commit-info/src/api/clients/restclient"
 	"github.com/greendinosaur/gh-commit-info/src/api/utils/errors"
+	"github.com/greendinosaur/gh-commit-info/src/api/utils/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -51,8 +50,8 @@ func TestGetRepoPRsErrorFromGithub(t *testing.T) {
 		URL:        "https://api.github.com/repos/myowner/myrepo/pulls?state=all",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusUnauthorized,
-			Body:       ioutil.NopCloser(strings.NewReader(`{"message": "Requires authentication"}`)),
+			StatusCode: testutils.GetMockDataUnauthorisedResponseStatusCode(),
+			Body:       testutils.GetMockDataUnauthorisedResponseMessage(),
 		},
 		Err: nil,
 	})
@@ -76,8 +75,8 @@ func TestGetRepoSinglePRErrorFromGithub(t *testing.T) {
 		URL:        "https://api.github.com/repos/myowner/myrepo/pulls/1",
 		HTTPMethod: http.MethodGet,
 		Response: &http.Response{
-			StatusCode: http.StatusUnauthorized,
-			Body:       ioutil.NopCloser(strings.NewReader(`{"message": "Requires authentication"}`)),
+			StatusCode: testutils.GetMockDataUnauthorisedResponseStatusCode(),
+			Body:       testutils.GetMockDataUnauthorisedResponseMessage(),
 		},
 		Err: nil,
 	})

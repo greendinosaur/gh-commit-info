@@ -102,3 +102,40 @@ func TestGetMockResponseMockPresent(t *testing.T) {
 	assert.EqualValues(t, http.StatusUnauthorized, mock.StatusCode)
 	assert.EqualValues(t, ioutil.NopCloser(strings.NewReader(`{"message": "Requires authentication"}`)), mock.Body)
 }
+
+func TestGetMock(t *testing.T) {
+	StartMockups()
+	URL := "https://api.github.com/repos/myowner/myrepo/pulls?state=all"
+	method := http.MethodGet
+	AddMockup(Mock{
+		URL:        URL,
+		HTTPMethod: method,
+		Response: &http.Response{
+			StatusCode: http.StatusUnauthorized,
+			Body:       ioutil.NopCloser(strings.NewReader(`{"message": "Requires authentication"}`)),
+		},
+		Err: nil,
+	})
+	mock, err := Get(URL, nil)
+	assert.NotNil(t, mock)
+	assert.Nil(t, err)
+}
+
+func TestPostMock(t *testing.T) {
+	StartMockups()
+	FlushMockups()
+	URL := "https://api.github.com/repos/myowner/myrepo/pulls?state=all"
+	method := http.MethodPost
+	AddMockup(Mock{
+		URL:        URL,
+		HTTPMethod: method,
+		Response: &http.Response{
+			StatusCode: http.StatusUnauthorized,
+			Body:       ioutil.NopCloser(strings.NewReader(`{"message": "Requires authentication"}`)),
+		},
+		Err: nil,
+	})
+	mock, err := Post(URL, nil, nil)
+	assert.NotNil(t, mock)
+	assert.Nil(t, err)
+}

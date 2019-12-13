@@ -1,4 +1,4 @@
-package github
+package githubdomain
 
 import (
 	"encoding/json"

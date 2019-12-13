@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/greendinosaur/gh-commit-info/src/api/clients/restclient"
-	"github.com/greendinosaur/gh-commit-info/src/api/domain/github"
+	"github.com/greendinosaur/gh-commit-info/src/api/domain/githubdomain"
 )
 
 //common constants and functions needed to access the Github API
@@ -21,6 +21,9 @@ const (
 	headerAccept              = "Accept"
 	headerPRDraftAPI          = "application/vnd.github.shadow-cat-preview+json"
 	headerPRForCommitDraftAPI = "application/vnd.github.groot-preview+json"
+
+	FmtGithubDate              = "2006-01-02T15:04:05.999Z"
+	errorUnmarshallingResponse = "error when trying to unmarshal successful response: %s"
 )
 
 func getAuthorizationHeader(accessToken string) string {
@@ -40,27 +43,27 @@ func getCommonHeader(accessToken string) http.Header {
 //if there is an error in calling and parsing the response then an error is returned
 //otherwise the response body is converted into bytes which can be unmarshalled into the relevant
 //struct by the calling function
-func getDataFromGithubAPI(URL string, headers http.Header) ([]byte, *github.GithubErrorResponse) {
+func getDataFromGithubAPI(URL string, headers http.Header) ([]byte, *githubdomain.GithubErrorResponse) {
 	//the basic approach to calling Github to retrieve commit and PR data is the same irrespective
 	//of the Github API being called and the data being returned
 	//as a result, have put this logic into a common function
 	response, err := restclient.Get(URL, headers)
 	if err != nil {
 		log.Println(fmt.Sprintf("error when calling Github API: %s", err.Error()))
-		return nil, &github.GithubErrorResponse{StatusCode: http.StatusInternalServerError, Message: err.Error()}
+		return nil, &githubdomain.GithubErrorResponse{StatusCode: http.StatusInternalServerError, Message: err.Error()}
 	}
 
 	bytes, err := ioutil.ReadAll(response.Body)
 
 	if err != nil {
-		return nil, &github.GithubErrorResponse{StatusCode: http.StatusInternalServerError, Message: "invalid response body"}
+		return nil, &githubdomain.GithubErrorResponse{StatusCode: http.StatusInternalServerError, Message: "invalid response body"}
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode > 299 {
-		var errResponse github.GithubErrorResponse
+		var errResponse githubdomain.GithubErrorResponse
 		if err := json.Unmarshal(bytes, &errResponse); err != nil {
-			return nil, &github.GithubErrorResponse{StatusCode: http.StatusInternalServerError, Message: "invalid json response body"}
+			return nil, &githubdomain.GithubErrorResponse{StatusCode: http.StatusInternalServerError, Message: "invalid json response body"}
 		}
 
 		errResponse.StatusCode = response.StatusCode
@@ -71,8 +74,8 @@ func getDataFromGithubAPI(URL string, headers http.Header) ([]byte, *github.Gith
 	return bytes, nil
 }
 
-//getUnmarshalBodyError returns an error indicating there was a problem unmarhsalling the github response
-func getUnmarshalBodyError() *github.GithubErrorResponse {
-	return &github.GithubErrorResponse{StatusCode: http.StatusInternalServerError,
+//getUnmarshalBodyError returns an error indicating there was a problem unmarhsalling the githubdomain response
+func getUnmarshalBodyError() *githubdomain.GithubErrorResponse {
+	return &githubdomain.GithubErrorResponse{StatusCode: http.StatusInternalServerError,
 		Message: "error when trying to unmarshal github response"}
 }

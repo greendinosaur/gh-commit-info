@@ -1,4 +1,4 @@
-package github
+package githubdomain
 
 //GithubErrorResponse holds details about the errors received back from Github
 type GithubErrorResponse struct {

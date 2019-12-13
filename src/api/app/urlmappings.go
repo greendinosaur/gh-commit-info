@@ -12,5 +12,6 @@ func mapURLs() {
 	router.GET("/repos/:owner/:repo/commits", repos.GetRepoCommits)
 	router.GET("/repos/:owner/:repo/commits/:sha", repos.GetRepoSingleCommit)
 	router.GET("/repos/:owner/:repo/commits/:sha/pulls", repos.GetPRsForSingleCommit)
+	router.GET("/codereview/:owner/:repo", repos.GetCodeReviewReport)
 
 }

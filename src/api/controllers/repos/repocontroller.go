@@ -1,9 +1,9 @@
 package repos
 
 import (
-	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/greendinosaur/gh-commit-info/src/api/services"
@@ -14,12 +14,11 @@ func GetRepoPRs(c *gin.Context) {
 	owner := c.Param("owner")
 	repo := c.Param("repo")
 	state := c.Query("state")
-	fmt.Println(state)
 
 	if state == "" {
 		state = "all"
 	}
-	fmt.Println(state)
+
 	result, err := services.RepositoryService.GetRepoPRs(owner, repo, state)
 	if err != nil {
 		c.JSON(err.Status(), err)
@@ -83,4 +82,20 @@ func GetPRsForSingleCommit(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, result)
+}
+
+//GetCodeReviewReport returns a plain text response with details of the commits and PRs
+func GetCodeReviewReport(c *gin.Context) {
+	owner := c.Param("owner")
+	repo := c.Param("repo")
+	//TODO: for now hard code to the last month of commits, will need to pass this in as variables
+	fromDate := time.Now().UTC().AddDate(-1, 0, 0)
+	toDate := time.Now().UTC()
+
+	result, err := services.RepositoryService.GetCodeReviewReport(owner, repo, fromDate, toDate)
+	if err != nil {
+		c.JSON(err.Status(), err)
+		return
+	}
+	c.Data(http.StatusOK, "text/plain", []byte(result))
 }

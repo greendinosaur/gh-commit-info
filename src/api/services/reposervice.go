@@ -1,12 +1,13 @@
 package services
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/greendinosaur/gh-commit-info/src/api/config"
-	"github.com/greendinosaur/gh-commit-info/src/api/domain/github"
+	"github.com/greendinosaur/gh-commit-info/src/api/domain/githubdomain"
 	"github.com/greendinosaur/gh-commit-info/src/api/providers/githubprovider"
 	"github.com/greendinosaur/gh-commit-info/src/api/utils/errors"
 )
@@ -14,11 +15,12 @@ import (
 type reposService struct{}
 
 type reposServiceInterface interface {
-	GetRepoPRs(owner string, repo string, scope string) ([]github.MultiplePullRequestResponse, errors.APIError)
-	GetRepoSinglePR(owner string, repo string, pullNumber string) (*github.GetSinglePullRequestResponse, errors.APIError)
-	GetSingleCommitPR(owner string, repo string, SHA string) ([]github.MultiplePullRequestResponse, errors.APIError)
-	GetRepoCommits(owner string, repo string) ([]github.GetCommitInfo, errors.APIError)
-	GetRepoSingleCommit(owner string, repo string, SHA string) (*github.GetCommitInfo, errors.APIError)
+	GetRepoPRs(owner string, repo string, scope string) ([]githubdomain.GetSinglePullRequestResponse, errors.APIError)
+	GetRepoSinglePR(owner string, repo string, pullNumber string) (*githubdomain.GetSinglePullRequestResponse, errors.APIError)
+	GetSingleCommitPR(owner string, repo string, SHA string) ([]githubdomain.GetSinglePullRequestResponse, errors.APIError)
+	GetRepoCommits(owner string, repo string) ([]githubdomain.GetCommitInfo, errors.APIError)
+	GetRepoSingleCommit(owner string, repo string, SHA string) (*githubdomain.GetCommitInfo, errors.APIError)
+	GetCodeReviewReport(owner string, repo string, fromDate time.Time, endDate time.Time) (string, errors.APIError)
 }
 
 const (
@@ -125,7 +127,7 @@ func validateSingleCommitPRInputs(owner string, repo string, SHA string) (string
 }
 
 //check that the inputs for all commits in a repo are good
-func validateAllommitsInputs(owner string, repo string) (string, string, errors.APIError) {
+func validateAllCommitsInputs(owner string, repo string) (string, string, errors.APIError) {
 
 	owner = strings.TrimSpace(owner)
 	repo = strings.TrimSpace(repo)
@@ -144,7 +146,7 @@ func validateAllommitsInputs(owner string, repo string) (string, string, errors.
 }
 
 //GetRepoPRs returns pull request information for the given repo
-func (s *reposService) GetRepoPRs(owner string, repo string, scope string) ([]github.MultiplePullRequestResponse, errors.APIError) {
+func (s *reposService) GetRepoPRs(owner string, repo string, scope string) ([]githubdomain.GetSinglePullRequestResponse, errors.APIError) {
 	//firstly check the input params are valid and create an error otherwise
 	var err errors.APIError
 	owner, repo, scope, err = validatePRInputs(owner, repo, scope)
@@ -162,7 +164,7 @@ func (s *reposService) GetRepoPRs(owner string, repo string, scope string) ([]gi
 }
 
 //GetRepoSinglePR returns details about a single pull request
-func (s *reposService) GetRepoSinglePR(owner string, repo string, pullNumber string) (*github.GetSinglePullRequestResponse, errors.APIError) {
+func (s *reposService) GetRepoSinglePR(owner string, repo string, pullNumber string) (*githubdomain.GetSinglePullRequestResponse, errors.APIError) {
 	//firstly check the input params are valid and create an error otherwise
 	var err errors.APIError
 	owner, repo, pullNumber, err = validateSinglePRInputs(owner, repo, pullNumber)
@@ -171,6 +173,7 @@ func (s *reposService) GetRepoSinglePR(owner string, repo string, pullNumber str
 	}
 	//then call the provider with valid parameters
 	response, errProvider := githubprovider.GetRepoSinglePR(config.GetGithubAccessToken(), owner, repo, pullNumber)
+
 	if errProvider != nil {
 		return nil, errors.NewAPIError(errProvider.StatusCode, errProvider.Message)
 	}
@@ -179,7 +182,7 @@ func (s *reposService) GetRepoSinglePR(owner string, repo string, pullNumber str
 }
 
 //GetSingleCommitPR returns the PRs associated with the specific commit SHA
-func (s *reposService) GetSingleCommitPR(owner string, repo string, SHA string) ([]github.MultiplePullRequestResponse, errors.APIError) {
+func (s *reposService) GetSingleCommitPR(owner string, repo string, SHA string) ([]githubdomain.GetSinglePullRequestResponse, errors.APIError) {
 
 	var err errors.APIError
 	owner, repo, SHA, err = validateSingleCommitPRInputs(owner, repo, SHA)
@@ -197,9 +200,9 @@ func (s *reposService) GetSingleCommitPR(owner string, repo string, SHA string) 
 }
 
 //GetRepoCommits returns all commits from the given repo
-func (s *reposService) GetRepoCommits(owner string, repo string) ([]github.GetCommitInfo, errors.APIError) {
+func (s *reposService) GetRepoCommits(owner string, repo string) ([]githubdomain.GetCommitInfo, errors.APIError) {
 	var err errors.APIError
-	owner, repo, err = validateAllommitsInputs(owner, repo)
+	owner, repo, err = validateAllCommitsInputs(owner, repo)
 	if err != nil {
 		return nil, err
 	}
@@ -212,8 +215,25 @@ func (s *reposService) GetRepoCommits(owner string, repo string) ([]github.GetCo
 	return response, nil
 }
 
+//getRepoCommitsInDateRange returns all commits from the given repo in the indicated date range
+func getRepoCommitsInDateRange(owner string, repo string, fromDate time.Time, toDate time.Time) ([]githubdomain.GetCommitInfo, errors.APIError) {
+	var err errors.APIError
+	owner, repo, err = validateAllCommitsInputs(owner, repo)
+	if err != nil {
+		return nil, err
+	}
+
+	response, errProvider := githubprovider.GetRepoCommitsInDateRange(config.GetGithubAccessToken(), owner, repo, fromDate, toDate)
+
+	if errProvider != nil {
+		return nil, errors.NewAPIError(errProvider.StatusCode, errProvider.Message)
+	}
+
+	return response, nil
+}
+
 //GetRepoSingleCommit returns details about a specific commit inside the indicated repo
-func (s *reposService) GetRepoSingleCommit(owner string, repo string, SHA string) (*github.GetCommitInfo, errors.APIError) {
+func (s *reposService) GetRepoSingleCommit(owner string, repo string, SHA string) (*githubdomain.GetCommitInfo, errors.APIError) {
 	var err errors.APIError
 	owner, repo, SHA, err = validateSingleCommitPRInputs(owner, repo, SHA)
 	if err != nil {
@@ -228,17 +248,97 @@ func (s *reposService) GetRepoSingleCommit(owner string, repo string, SHA string
 	return response, nil
 }
 
-//determines if a commit is a merge commit
-func isMergeCommit() bool {
+//isMergeCommit determines if a commit is a merge commit
+func isMergeCommit(commitInfo *githubdomain.GetCommitInfo) bool {
+	//business logic from github that a merge commit has two parents, other commits don't
+	//assumption is that commits have been retrieved from the master branch only
+
+	if len(commitInfo.Parents) > 1 {
+		return true
+	}
+	return false
+
+}
+
+func isPRResultingInMerge(pullRequest *githubdomain.GetSinglePullRequestResponse) bool {
+	if pullRequest.State == "closed" && len(pullRequest.MergeCommitSHA) > 0 {
+		return true
+	}
+
 	return false
 }
 
-//determines if all commits in a given timeframe are associated with an approved PR
-func isCommitWithApprovedPR(startTime time.Time, endtime time.Time) bool {
-	return false
-}
+//GetCodeReviewReport returns a text file that summarises the commit and PR data and also
+//provides a list of the relevant commits and PRs
+//this function will need to:
+//1. get all the commits in a given timeframe
+//2. for each commit, determine if a merge commit or proper commit
+//3. for each proper commit, determine if it has an approved PR that resulted in the merge commit
+//4. summarise the results (#total commits, #merge commits, #commits with PR, #commits with no PR)
+//5. summarise the commits (sha, committer, date, commit message)
+//6. summarise the PRs (PR title, approver, raiser, date)
+//7. output this all as a text file that can be streamed back via the a client via an API
+//Note PR reviews are stored in a different object and require a different GitHub API call
+//therefore, if want to get the list of approvers who approved the PR, need another API call
+//should look to do this
+func (s *reposService) GetCodeReviewReport(owner string, repo string, fromDate time.Time, endDate time.Time) (string, errors.APIError) {
 
-//checks that the person approving the PR is not responsible for any of the commits detailed in the PR
-func isPRApproverDifferentToCommitters() bool {
-	return false
+	//set-up the counters for the statistics to report on later
+	totalMergeCommits := 0
+	totalCommitsWithPR := 0
+	totalCommitsWithNoPR := 0
+
+	//create an array where we can store indices for those commits that aren't merge commits and have no PRs
+	var indexCommitsWithNoPR []int
+
+	repoCommits, err := getRepoCommitsInDateRange(owner, repo, fromDate, endDate)
+
+	if err != nil {
+		return "", err
+	}
+
+	//now we can loop over each commit and get hold of the associated PRs
+	for commitCounter, repoCommitInfo := range repoCommits {
+		//check for the merge and store this
+		isMergeCommit := isMergeCommit(&repoCommitInfo)
+		repoCommitInfo.IsMergeCommit = isMergeCommit
+
+		if isMergeCommit {
+			totalMergeCommits++
+		}
+
+		//now get the associated PRs and find one that has been closed and has a merge commit
+		//may be multiple PRs associated with this commit
+		//still making assumption feature branches are created, then a PR and merge into master
+		//so simple feature branching with development on master
+		//cater for other scenarios later
+		pullsForCommit, err := RepositoryService.GetSingleCommitPR(owner, repo, repoCommitInfo.SHA)
+
+		if err != nil {
+			return "", err
+		}
+
+		if len(pullsForCommit) == 0 {
+			//no PR associated with this commit so need to store for reporting purposes
+			indexCommitsWithNoPR = append(indexCommitsWithNoPR, commitCounter)
+			totalCommitsWithNoPR++
+		} else {
+			//now we have the array of PRs iterate through and see if there is a merged and closed PR
+			for _, pull := range pullsForCommit {
+				if isPRResultingInMerge(&pull) {
+					//put details of this PR into the commit for later reporting
+					repoCommitInfo.PRForMerge = &pull
+					totalCommitsWithPR++
+					//TODO: what if multiple PRs? does this happen?
+				}
+			}
+		}
+
+	}
+
+	//can now summarise the information and return this
+	summaryInfo := fmt.Sprintf("#Total Commits: %d, #Merged Commits: %d,  #Commits with PRs: %d, #Non-merge commits with no PR: %d",
+		len(repoCommits), totalMergeCommits, totalCommitsWithPR, totalCommitsWithNoPR)
+
+	return summaryInfo, nil
 }
