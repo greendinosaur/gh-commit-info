@@ -116,5 +116,5 @@ func TestGetMockDataClosedPRForCommitResponsesMessage(t *testing.T) {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(GetMockDataClosedPRForCommitResponsesMessage())
 	newStr := buf.String()
-	assert.EqualValues(t, `{"url":"some URL","id":123456,"number":9,"state":"closed","title":"Title of the PR","created_at":"2019-11-27T14:30:10.578255Z","updated_at":"2019-10-28T14:30:10.578369Z","closed_at":"2019-10-28T14:30:10.578369Z","user":{"login":"My Login ID","id":123456,"type":"A user","site_admin":true},"assignee":{"login":"A Second Login ID","id":8767,"type":"A user","site_admin":false},"base":{"label":"A label","ref":"A Reference","sha":"ABCDEF123456768"}}`, newStr)
+	assert.EqualValues(t, `[{"url":"some URL","id":123456,"number":9,"state":"closed","title":"Title of the PR","created_at":"2019-11-27T14:30:10.578255Z","updated_at":"2019-10-28T14:30:10.578369Z","closed_at":"2019-10-28T14:30:10.578369Z","user":{"login":"My Login ID","id":123456,"type":"A user","site_admin":true},"assignee":{"login":"A Second Login ID","id":8767,"type":"A user","site_admin":false},"base":{"label":"A label","ref":"A Reference","sha":"ABCDEF123456768"}}]`, newStr)
 }

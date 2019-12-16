@@ -5,8 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	//need to fix this import
-	"github.com/greendinosaur/golang-microservices/src/api/utils/test_utils"
+	"github.com/greendinosaur/gh-commit-info/src/api/utils/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,7 +16,7 @@ func TestConstants(t *testing.T) {
 func TestBobby(t *testing.T) {
 	response := httptest.NewRecorder()
 	request := httptest.NewRequest(http.MethodGet, "/bobby", nil)
-	c := test_utils.GetMockedContext(request, response)
+	c, _ := testutils.GetMockedContext(request, response)
 
 	Chariot(c)
 

@@ -80,7 +80,7 @@ func GetMockDataApprovedPRForCommitResponsesMessage() io.ReadCloser {
 
 //GetMockDataClosedPRForCommitResponsesMessage returns a matching closed but not merged PR for the commit sha AABCDEF123456
 func GetMockDataClosedPRForCommitResponsesMessage() io.ReadCloser {
-	return ioutil.NopCloser(strings.NewReader(`{"url":"some URL","id":123456,"number":9,"state":"closed","title":"Title of the PR","created_at":"2019-11-27T14:30:10.578255Z","updated_at":"2019-10-28T14:30:10.578369Z","closed_at":"2019-10-28T14:30:10.578369Z","user":{"login":"My Login ID","id":123456,"type":"A user","site_admin":true},"assignee":{"login":"A Second Login ID","id":8767,"type":"A user","site_admin":false},"base":{"label":"A label","ref":"A Reference","sha":"ABCDEF123456768"}}`))
+	return ioutil.NopCloser(strings.NewReader(`[{"url":"some URL","id":123456,"number":9,"state":"closed","title":"Title of the PR","created_at":"2019-11-27T14:30:10.578255Z","updated_at":"2019-10-28T14:30:10.578369Z","closed_at":"2019-10-28T14:30:10.578369Z","user":{"login":"My Login ID","id":123456,"type":"A user","site_admin":true},"assignee":{"login":"A Second Login ID","id":8767,"type":"A user","site_admin":false},"base":{"label":"A label","ref":"A Reference","sha":"ABCDEF123456768"}}]`))
 }
 
 //represents the error messages returned when validating parameters provided to service functions
