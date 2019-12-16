@@ -21,5 +21,3 @@ bw-output
 cp.out
 .sonar.sh
 newman.sh
-
-go.sum
