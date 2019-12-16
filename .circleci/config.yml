@@ -24,9 +24,7 @@ jobs: # basic units of work in a run
       # Normally, this step would be in a custom primary image;
       # we've added it here for the sake of 
       - run: go get github.com/jstemmer/go-junit-report
-      - run: go get github.com/gin-gonic/gin
-      - run: go get github.com/stretchr/testify
-      - run: go get go.uber.org/zap
+
 
 
       - run:
