@@ -14,8 +14,12 @@
 # The localhost postman environment file
 Localhost.postman_environment.json
 
-# VS Code and other files
+# VS Code and other files related to sonar scanning
 .vscode
 .scannerwork
 bw-output
 cp.out
+.sonar.sh
+newman.sh
+
+go.sum
