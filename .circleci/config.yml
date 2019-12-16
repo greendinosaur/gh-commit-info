@@ -43,7 +43,7 @@ jobs: # basic units of work in a run
 
       - run:
           name: Start service
-          command: ./workdir/src/api/main
+          command: src/api/main
           background: true # keep service running and proceed to next step
 
       - run:
