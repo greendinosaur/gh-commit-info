@@ -1,4 +1,4 @@
-version: 2.1 # use CircleCI 2.0
+version: 2.1 
 orbs:
   newman: postman/newman@0.0.2
 jobs: # basic units of work in a run
