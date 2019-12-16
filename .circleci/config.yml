@@ -32,8 +32,9 @@ jobs: # basic units of work in a run
             # store the results of our tests in the $TEST_RESULTS directory
           command: |
             PACKAGE_NAMES=$(go list ./... | circleci tests split --split-by=timings --timings-type=classname)
-            gotestsum --junitfile ${TEST_RESULTS}/gotestsum-report.xml -- $PACKAGE_NAMES
-
+            gotestsum --junitfile ${TEST_RESULTS}/gotestsum-report.xml -- $PACKAGE_NAMES ---coverprofile=cover.out
+            go tool cover -html=cover.out -o coverage.html
+            mv coverage.html ${TEST_RESULTS}/coverage.html
       - run: make build # pull and build dependencies for the project
 
       - save_cache: # Store cache in the /go/pkg directory
