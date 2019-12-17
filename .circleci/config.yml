@@ -72,7 +72,7 @@ jobs: # basic units of work in a run
     working_directory: /go/src/github.com/greendinosaur/gh-commit-info
     steps:
       - checkout # check out source code to working directory
-      - run: make build # pull and build dependencies for the project
+      - run: make all # pull and build dependencies for the project
       - sonarcloud/scan
   
 
