@@ -9,10 +9,12 @@ build:
 
 test:
 	go test -v -coverprofile cp.out -count=1 -parallel=1 $(PACKAGES)/...
+	go tool cover -html=cp.out -o coverage.html
 
 silent-test:
 	go test -coverprofile cp.out -count=1 -parallel=1 $(PACKAGES)/...
-
+	go tool cover -html=cp.out -o coverage.html
+	
 format:
 	go fmt $(PACKAGES)/...
 
