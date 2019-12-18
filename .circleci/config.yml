@@ -96,7 +96,7 @@ jobs: # basic units of work in a run
 
       - checkout # check out source code to working directory
      
-      - snyk/scan | tee ${TEST_RESULTS}/snyk.out
+      - run: snyk/scan | tee ${TEST_RESULTS}/snyk.out
 
       - store_artifacts: # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
           path: /tmp/test-results
