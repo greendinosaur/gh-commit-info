@@ -86,10 +86,21 @@ jobs: # basic units of work in a run
       - image: circleci/golang:1.13
     # directory where steps are run. Path must conform to the Go Workspace requirements
     working_directory: /go/src/github.com/greendinosaur/gh-commit-info
+    
+    environment: # environment variables for the build itself
+      TEST_RESULTS: /tmp/test-results # path to where test results will be saved
+
+    
     steps:
+      - run: mkdir -p $TEST_RESULTS # create the test results directory
+
       - checkout # check out source code to working directory
-      - snyk/scan:
-          target-file: go.mod
+     
+      - snyk/scan | tee ${TEST_RESULTS}/snyk.out
+
+      - store_artifacts: # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
+          path: /tmp/test-results
+      
 
   
 
