@@ -88,7 +88,8 @@ jobs: # basic units of work in a run
     working_directory: /go/src/github.com/greendinosaur/gh-commit-info
     steps:
       - checkout # check out source code to working directory
-      - snyk/scan
+      - snyk/scan:
+          target-file: go.mod
 
   
 
@@ -101,4 +102,4 @@ workflows:
           context: sonarcloud
       - run_snyk_scan:
           context: snyk
-          target-file: go.mod
+    
