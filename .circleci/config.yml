@@ -96,7 +96,11 @@ workflows:
   version: 2
   build-workflow:
     jobs:
-      - build
+      - build:
+          context: myapp
+      - run_api_tests:
+          requires:
+            - build
       - run_sq_scan:
           context: sonarcloud
       - run_snyk_scan:
