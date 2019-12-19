@@ -10,9 +10,7 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-
-# The localhost postman environment file
-Localhost.postman_environment.json
+coverage.html
 
 # VS Code and other files related to sonar scanning
 .vscode
