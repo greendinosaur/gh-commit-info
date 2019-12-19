@@ -1,6 +1,5 @@
 version: 2.1 
 orbs:
-  newman: postman/newman@0.0.2
   sonarcloud: sonarsource/sonarcloud@1.0.0
   snyk: snyk/snyk@0.0.8
 jobs: # basic units of work in a run
@@ -17,9 +16,9 @@ jobs: # basic units of work in a run
     steps: # steps that comprise the `build` job
       - checkout # check out source code to working directory
       - run: mkdir -p $TEST_RESULTS # create the test results directory
-      - run: npm install
+      - run: npm install # installing newman for API testing
       - run: 
-            name: Install newman
+            name: Install newman and reporting utility
             command: sudo npm install -g newman
       - restore_cache: # restores saved cache if no changes are detected since last run
         # Read about caching dependencies: https://circleci.com/docs/2.0/caching/
@@ -57,7 +56,7 @@ jobs: # basic units of work in a run
       - run:
           name: running newman tests
           command: |
-            newman run tests/smoke_tests.postman_collection.json -e tests/Localhost.postman_environment.json
+            newman run tests/smoke_tests.postman_collection.json -e tests/Localhost.postman_environment.json --reporters cli,json --reporter-json-export ${TEST_RESULTS}/outputfile.json
 
       - store_artifacts: # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
           path: /tmp/test-results
@@ -66,15 +65,6 @@ jobs: # basic units of work in a run
       - store_test_results: # Upload test results for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
           path: /tmp/test-results
 
-  run_api_tests:
-    executor: newman/postman-newman-docker
-    working_directory: /go/src/github.com/greendinosaur/gh-commit-info
-    steps:
-      - checkout # check out source code to working directory
-      - newman/newman-run:
-          collection: "tests/smoke_tests.postman_collection.json"
-          environment: "tests/Localhost.postman_environment.json"
-  
   run_sq_scan: # runs not using Workflows must have a `build` job as entry point
     docker: # run the steps with Docker
       # CircleCI Go images available at: https://hub.docker.com/r/circleci/golang/
