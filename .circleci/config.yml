@@ -52,6 +52,11 @@ jobs: # basic units of work in a run
             sleep 5
             curl --retry 10 --retry-delay 1 -X GET http://localhost:8080/bobby
 
+      - run:
+          name: running newman tests
+          command: |
+            newman run tests/smoke_tests.postman_collection.json -e tests/Localhost.postman_environment.json
+
       - store_artifacts: # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
           path: /tmp/test-results
           destination: raw-test-output
