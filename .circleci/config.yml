@@ -56,7 +56,7 @@ jobs: # basic units of work in a run
       - run:
           name: running newman tests
           command: |
-            newman run tests/smoke_tests.postman_collection.json -e tests/Localhost.postman_environment.json --reporters cli,json --reporter-json-export ${TEST_RESULTS}/outputfile.json
+            newman run tests/smoke_tests.postman_collection.json -e tests/Localhost.postman_environment.json --reporters cli,json --reporter-json-export ${TEST_RESULTS}/apismoketests.json
 
       - store_artifacts: # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
           path: /tmp/test-results
